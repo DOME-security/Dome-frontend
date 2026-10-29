@@ -1,0 +1,19 @@
+# Changes to these paths need review from a code owner (enable "Require review
+# from Code Owners" in the main branch ruleset). Build config is an attack
+# surface: payloads have been hidden at the end of config files.
+# Replace the individual owner with a maintainers team once the org has one.
+
+/.github/                 @Coredevjay
+/package.json             @Coredevjay
+/pnpm-lock.yaml           @Coredevjay
+/pnpm-workspace.yaml      @Coredevjay
+/.npmrc                   @Coredevjay
+/vite.config.ts           @Coredevjay
+/tsconfig.json            @Coredevjay
+/eslint.config.js         @Coredevjay
+/playwright.config.ts     @Coredevjay
+/lighthouserc.json        @Coredevjay
+/index.html               @Coredevjay
+/config/                  @Coredevjay
+/scripts/                 @Coredevjay
+/src/vendor/              @Coredevjay
