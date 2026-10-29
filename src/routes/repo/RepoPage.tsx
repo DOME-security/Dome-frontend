@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { m } from '../../i18n';
 import { Link, useParams } from 'react-router';
 import { LedgerCheck } from '../../components/LedgerCheck';
 import { ReportView } from '../../components/ReportView';
@@ -13,14 +14,10 @@ import { useLedgerCheck } from '../../lib/stellar/useLedgerCheck';
 import ui from '../../styles/ui.module.css';
 import { NotFoundPage } from '../not-found/NotFoundPage';
 
-const CHECK_TEXT: Record<ReportCheck, string> = {
-  match: '✓ The report below hashes to the value recorded on chain.',
-  mismatch: '✗ The report below does not match the hash recorded on chain. Treat this result with suspicion.',
-  unavailable: 'The report could not be compared with the chain.',
-};
+const CHECK_TEXT: Record<ReportCheck, string> = m.repo.check;
 
 function verdictLabel(verdict: string): string {
-  return Object.hasOwn(VERDICT_TEXT, verdict) ? VERDICT_TEXT[verdict as Verdict].label : 'Unreadable';
+  return Object.hasOwn(VERDICT_TEXT, verdict) ? VERDICT_TEXT[verdict as Verdict].label : m.verdict.unreadable;
 }
 
 function Attestation({ attestation, scan }: { attestation: OnChainAttestation; scan: Scan | null }) {
@@ -35,13 +32,13 @@ function Attestation({ attestation, scan }: { attestation: OnChainAttestation; s
   const attester = accountUrl(attestation.attester);
   return (
     <section aria-labelledby="attestation-heading" className={ui.card}>
-      <h2 id="attestation-heading">On-chain attestation</h2>
+      <h2 id="attestation-heading">{m.repo.attestationHeading}</h2>
       <dl className={ui.dl}>
-        <dt>Verdict</dt>
+        <dt>{m.repo.verdict}</dt>
         <dd>{verdictLabel(attestation.verdict)}</dd>
-        <dt>Commit</dt>
+        <dt>{m.repo.commit}</dt>
         <dd className={ui.mono}>{attestation.commit.slice(0, 12)}</dd>
-        <dt>Attester</dt>
+        <dt>{m.repo.attester}</dt>
         <dd className={ui.mono}>
           {attester ? (
             <a href={attester} target="_blank" rel="noreferrer" title={attestation.attester}>
@@ -51,26 +48,22 @@ function Attestation({ attestation, scan }: { attestation: OnChainAttestation; s
             shortKey(attestation.attester)
           )}
         </dd>
-        <dt>Recorded</dt>
+        <dt>{m.repo.recorded}</dt>
         <dd>
-          Ledger {attestation.ledger}
+          {m.checkFile.ledger(attestation.ledger)}
           {tx && (
             <>
               {' · '}
               <a href={tx} target="_blank" rel="noreferrer">
-                View transaction
+                {m.checkFile.viewTx}
               </a>
             </>
           )}
         </dd>
-        <dt>Report hash</dt>
+        <dt>{m.repo.reportHash}</dt>
         <dd className={ui.mono}>{attestation.reportHash}</dd>
       </dl>
-      {sameCommit ? (
-        check && <p role="status">{CHECK_TEXT[check]}</p>
-      ) : (
-        <p className={ui.hint}>This attestation is for a different commit from the latest scan below.</p>
-      )}
+      {sameCommit ? check && <p role="status">{CHECK_TEXT[check]}</p> : <p className={ui.hint}>{m.repo.otherCommit}</p>}
     </section>
   );
 }
@@ -102,35 +95,35 @@ export function RepoPage() {
       </h1>
       <p>
         <a href={`https://github.com/${owner}/${repo}`} target="_blank" rel="noreferrer">
-          View on GitHub
+          {m.repo.viewOnGitHub}
         </a>
       </p>
       {isPending && <Loading />}
       {notScanned && (
         <div className={ui.card}>
-          <p>Dome has not scanned this repository yet.</p>
+          <p>{m.repo.notScanned}</p>
           <Link to="/check/repo" className={ui.button}>
-            Check it now
+            {m.repo.checkNow}
           </Link>
         </div>
       )}
       {error && !notScanned && <ErrorMessage error={error} />}
       {data && (data.attestation || ledger.check.state === 'mismatch') && (
-        <LedgerCheck check={ledger.check} subject="this attestation" />
+        <LedgerCheck check={ledger.check} subject={m.repo.subject} />
       )}
       {data && !notScanned && (
         <>
           {data.attestation ? (
             <Attestation attestation={data.attestation} scan={data.latestScan} />
           ) : (
-            <p className={ui.muted}>No on-chain attestation has been published for this repository yet.</p>
+            <p className={ui.muted}>{m.repo.noAttestation}</p>
           )}
-          <h2>Latest scan</h2>
+          <h2>{m.repo.latestScan}</h2>
           {data.latestScan?.status === 'done' && data.latestScan.report ? (
             <ReportView report={data.latestScan.report} repository={data.latestScan.repository} commit={data.latestScan.commit} />
           ) : (
             <p>
-              No finished scan yet. <Link to="/check/repo">Start one</Link>.
+              {m.repo.noFinishedScan} <Link to="/check/repo">{m.repo.startOne}</Link>.
             </p>
           )}
         </>

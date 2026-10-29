@@ -1,4 +1,5 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
+import { m } from '../../i18n';
 import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router';
 import { LedgerCheck } from '../../components/LedgerCheck';
@@ -41,16 +42,13 @@ export function RegistryPage() {
 
   return (
     <div className={ui.wide}>
-      <title>Registry · Dome</title>
+      <title>{m.app.titleSuffix(m.app.nav.registry)}</title>
       <div className={ui.page}>
-        <h1>Dome Registry</h1>
-        <p className={ui.lead}>
-          Fingerprints of files confirmed as malicious. Each one was approved by several independent curators and recorded on{' '}
-          {NETWORK_LABEL[config.network]}, so anyone can check it without trusting Dome.
-        </p>
+        <h1>{m.registry.title}</h1>
+        <p className={ui.lead}>{m.registry.lead(NETWORK_LABEL[config.network])}</p>
         {contract && (
           <p className={ui.hint}>
-            Contract{' '}
+            {m.registry.contract}{' '}
             <a href={contract} target="_blank" rel="noreferrer" className={ui.mono} title={config.registryContractId}>
               {shortKey(config.registryContractId, 6)}
             </a>
@@ -58,19 +56,19 @@ export function RegistryPage() {
         )}
       </div>
 
-      {query.isPending && <Loading label="Loading indicators…" />}
+      {query.isPending && <Loading label={m.registry.loading} />}
       {query.error && <ErrorMessage error={query.error} />}
 
       {query.isSuccess && (
         <>
-          {sample.length > 0 && <LedgerCheck check={ledger.check} subject={`a sample of ${sample.length} listed fingerprints`} />}
+          {sample.length > 0 && <LedgerCheck check={ledger.check} subject={m.registry.sample(sample.length)} />}
           <div className={ui.row}>
             <div>
               <label htmlFor={campaignId} className={ui.label}>
-                Campaign
+                {m.registry.campaignLabel}
               </label>
               <select id={campaignId} className={ui.input} value={campaign} onChange={(e) => setCampaign(e.target.value)}>
-                <option value="">All campaigns ({indicators.length})</option>
+                <option value="">{m.registry.allCampaigns(indicators.length)}</option>
                 {campaigns.map((c) => (
                   <option key={c} value={c}>
                     {c}
@@ -81,16 +79,16 @@ export function RegistryPage() {
           </div>
 
           {shown.length === 0 ? (
-            <p>No active indicators yet.</p>
+            <p>{m.registry.empty}</p>
           ) : (
             <div className={ui.tableWrap}>
               <table className={ui.table}>
-                <caption className="visually-hidden">Active indicators</caption>
+                <caption className="visually-hidden">{m.registry.caption}</caption>
                 <thead>
                   <tr>
-                    <th scope="col">Kind</th>
-                    <th scope="col">Fingerprint or name</th>
-                    <th scope="col">Campaign</th>
+                    <th scope="col">{m.registry.columns.kind}</th>
+                    <th scope="col">{m.registry.columns.value}</th>
+                    <th scope="col">{m.registry.columns.campaign}</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -122,17 +120,14 @@ export function RegistryPage() {
                 onClick={() => query.fetchNextPage()}
                 disabled={query.isFetchingNextPage}
               >
-                {query.isFetchingNextPage ? 'Loading…' : 'Load more'}
+                {query.isFetchingNextPage ? m.app.loading : m.registry.loadMore}
               </button>
             </p>
           )}
         </>
       )}
 
-      <p className={ui.hint}>
-        This list comes from the Dome API&apos;s index of the ledger. Open an indicator to see its approvals and full on-chain
-        record. Listing proposed and retracted indicators is planned.
-      </p>
+      <p className={ui.hint}>{m.registry.footnote}</p>
     </div>
   );
 }

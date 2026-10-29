@@ -1,3 +1,4 @@
+import { m } from '../i18n';
 import { config } from './config';
 import type { CreatedScan, IndicatorLookup, IndicatorPage, RepoSummary, Scan } from './types';
 
@@ -23,7 +24,7 @@ function isObject(value: unknown): value is Record<string, unknown> {
 }
 
 function expect(condition: boolean, what: string): asserts condition {
-  if (!condition) throw new ApiError(`Unexpected response from the Dome API (${what}).`, 0);
+  if (!condition) throw new ApiError(m.apiErrors.unexpected(what), 0);
 }
 
 function checkScan(value: unknown): Scan {
@@ -55,7 +56,7 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = (...a
         headers: { accept: 'application/json', ...init?.headers },
       });
     } catch {
-      throw new ApiError('Could not reach the Dome API. Check your connection and try again.', 0);
+      throw new ApiError(m.apiErrors.unreachable, 0);
     }
     let body: unknown = null;
     try {
@@ -94,7 +95,7 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = (...a
 
     async getIndicator(sha256) {
       const hash = sha256.toLowerCase();
-      if (!isSha256(hash)) throw new ApiError('That is not a SHA-256 hash.', 400);
+      if (!isSha256(hash)) throw new ApiError(m.apiErrors.notSha256, 400);
       const body = await request(`/v1/indicators/${hash}`);
       expect(isObject(body) && typeof body.known === 'boolean', 'indicator');
       return body as unknown as IndicatorLookup;
@@ -117,11 +118,11 @@ export function createApiClient(baseUrl: string, fetchImpl: typeof fetch = (...a
  * (or a repository it scanned) returns can change what the user reads.
  */
 export function errorMessage(status: number): string {
-  if (status === 400) return 'The Dome API could not accept that request. Check the link and try again.';
-  if (status === 404) return 'Not found.';
-  if (status === 429) return 'Too many requests. Wait a minute and try again.';
-  if (status >= 500) return 'The Dome API is having trouble. Try again in a few minutes.';
-  return `The Dome API returned an error (${status}).`;
+  if (status === 400) return m.apiErrors.status400;
+  if (status === 404) return m.apiErrors.status404;
+  if (status === 429) return m.apiErrors.status429;
+  if (status >= 500) return m.apiErrors.status5xx;
+  return m.apiErrors.other(status);
 }
 
 export const api: ApiClient = createApiClient(config.apiUrl);

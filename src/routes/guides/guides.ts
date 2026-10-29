@@ -1,13 +1,15 @@
 import type { LoaderFunctionArgs } from 'react-router';
+import { locale } from '../../i18n';
 import { parseMarkdown, type MarkdownDoc } from '../../lib/markdown';
 
-// Each guide is its own chunk, loaded only when the page opens.
-const sources = import.meta.glob<string>('../../content/guides/*.md', { query: '?raw', import: 'default' });
+// Each guide is its own chunk, loaded only when the page opens. Guides live in
+// one folder per locale.
+const sources = import.meta.glob<string>('../../content/guides/*/*.md', { query: '?raw', import: 'default' });
 
 export const GUIDE_SLUGS = ['infected', 'hardening', 'wave'] as const;
 
 export async function loadGuide(slug: string): Promise<MarkdownDoc | null> {
-  const load = sources[`../../content/guides/${slug}.md`];
+  const load = sources[`../../content/guides/${locale}/${slug}.md`];
   return load ? parseMarkdown(await load()) : null;
 }
 

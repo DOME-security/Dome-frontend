@@ -1,4 +1,5 @@
 import rulesFile from '../vendor/rules.json';
+import { m } from '../i18n';
 import type { Severity, Verdict } from './types';
 
 // Every word a user reads about a finding comes from the app. The backend
@@ -44,12 +45,12 @@ export function describeRule(ruleId: string): DescribedRule {
   const rule = Object.hasOwn(RULES, ruleId) ? RULES[ruleId] : undefined;
   if (rule) return { ...rule, id: ruleId, known: true };
   return {
-    id: RULE_ID.test(ruleId) ? ruleId : 'unknown rule',
+    id: RULE_ID.test(ruleId) ? ruleId : m.unknownRule.id,
     known: false,
-    title: 'A rule this version of the app does not know yet',
+    title: m.unknownRule.title,
     category: 'autorun',
     severity: 'review',
-    summary: 'Reload the page to get the latest app, or check the rule in the Dome documentation.',
+    summary: m.unknownRule.summary,
     reasons: {},
     references: [],
   };
@@ -60,44 +61,22 @@ export function reasonText(rule: RuleText, reasonKey: string): string | null {
   return Object.hasOwn(rule.reasons, reasonKey) ? rule.reasons[reasonKey]! : null;
 }
 
-export const SEVERITY_TEXT: Record<Severity, { label: string; icon: string; description: string }> = {
-  block: { label: 'Block', icon: '🔴', description: 'Do not open, install or run this until it has been reviewed.' },
-  review: { label: 'Review', icon: '🟠', description: 'Read this before opening the folder in your editor or running anything.' },
-  info: { label: 'Info', icon: '⚪', description: 'Worth knowing; not a problem on its own.' },
-};
+export const SEVERITY_TEXT: Record<Severity, { label: string; icon: string; description: string }> = m.severity;
 
 export const SEVERITY_ORDER: Record<Severity, number> = { block: 0, review: 1, info: 2 };
 
-export const VERDICT_TEXT: Record<Verdict, { label: string; summary: string; tone: Severity | 'clean' }> = {
-  block: {
-    label: 'Blocked',
-    summary:
-      'Dome found code that runs when you open, install or build this repository and matches a known attack pattern. Do not open it in your editor.',
-    tone: 'block',
-  },
-  review: {
-    label: 'Needs review',
-    summary: 'Dome found code that can run automatically. Read the findings before you open the folder or run anything.',
-    tone: 'review',
-  },
-  clean: {
-    label: 'No known pattern found',
-    summary: 'Dome did not find any known auto-run or payload pattern at this commit.',
-    tone: 'clean',
-  },
-  incomplete: {
-    label: 'Incomplete',
-    summary: 'Dome could not read every file, so this result is not complete. Treat it as needing review.',
-    tone: 'review',
-  },
+const VERDICT_TONE: Record<Verdict, Severity | 'clean'> = {
+  block: 'block',
+  review: 'review',
+  clean: 'clean',
+  incomplete: 'review',
 };
 
-export const INCOMPLETE_TEXT: Record<string, string> = {
-  'too-large': 'Too large to read',
-  'read-error': 'Could not be read',
-  'invalid-config': 'Configuration could not be parsed',
-  'unsupported-entry': 'Unsupported file type',
-};
+export const VERDICT_TEXT: Record<Verdict, { label: string; summary: string; tone: Severity | 'clean' }> = Object.fromEntries(
+  (Object.keys(VERDICT_TONE) as Verdict[]).map((v) => [v, { ...m.verdict[v], tone: VERDICT_TONE[v] }]),
+) as Record<Verdict, { label: string; summary: string; tone: Severity | 'clean' }>;
+
+export const INCOMPLETE_TEXT: Record<string, string> = m.incomplete;
 
 /** Shown at the end of every report. */
-export const HONESTY_NOTICE = 'No known pattern found is not the same as safe.';
+export const HONESTY_NOTICE = m.honestyNotice;

@@ -1,4 +1,5 @@
 import { useId, useState } from 'react';
+import { m } from '../i18n';
 import { isSha256 } from '../lib/api';
 import { hashFile } from '../lib/hash';
 import ui from '../styles/ui.module.css';
@@ -33,10 +34,10 @@ export function HashField({ label, hint, value, onChange }: Props) {
         aria-describedby={hintId}
       />
       <p id={hintId} className={ui.hint}>
-        {invalid ? 'A SHA-256 fingerprint is 64 characters, 0-9 and a-f. ' : ''}
+        {invalid ? `${m.checkFile.invalidHash} ` : ''}
         {hint}{' '}
         <label htmlFor={fileId} className={ui.linkButton}>
-          Hash a file on this device instead
+          {m.checkFile.hashFromFile}
         </label>
         <input
           id={fileId}
@@ -50,7 +51,7 @@ export function HashField({ label, hint, value, onChange }: Props) {
               setFileError(null);
               onChange(await hashFile(file));
             } catch (error) {
-              setFileError(error instanceof RangeError ? error.message : 'Could not read that file.');
+              setFileError(error instanceof RangeError ? error.message : m.checkFile.couldNotRead);
             }
           }}
         />

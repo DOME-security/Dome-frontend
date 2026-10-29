@@ -1,10 +1,11 @@
 import { safeHref } from '../lib/markdown';
+import { m } from '../i18n';
 import ui from '../styles/ui.module.css';
 
 /** Evidence links from the registry: https only, shown by host so the full URL cannot impersonate app text. */
 export function EvidenceLinks({ urls }: { urls: string[] }) {
   const safe = urls.map((u) => safeHref(u)).filter((u): u is string => Boolean(u && u.startsWith('https://')));
-  if (!safe.length) return <span className={ui.muted}>None published</span>;
+  if (!safe.length) return <span className={ui.muted}>{m.checkFile.evidenceNone}</span>;
   return (
     <ul>
       {safe.map((href) => (

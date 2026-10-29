@@ -1,13 +1,15 @@
 import { Link } from 'react-router';
+import { m } from '../../i18n';
 import ui from '../../styles/ui.module.css';
 
 export function NotFoundPage() {
+  const t = m.notFound;
   return (
     <div className={ui.page}>
-      <title>Page not found · Dome</title>
-      <h1>Page not found</h1>
+      <title>{m.app.titleSuffix(t.title)}</title>
+      <h1>{t.title}</h1>
       <p>
-        That page does not exist. Go back to the <Link to="/">home page</Link> or <Link to="/check/repo">check a repo</Link>.
+        {t.body} {t.goBackBefore} <Link to="/">{t.home}</Link> {t.or} <Link to="/check/repo">{t.checkRepo}</Link>.
       </p>
     </div>
   );

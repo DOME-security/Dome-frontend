@@ -1,3 +1,4 @@
+import { m } from '../i18n';
 import { config, type StellarNetwork } from './config';
 import { reportHash } from './hash';
 
@@ -5,10 +6,7 @@ import { reportHash } from './hash';
 // through the dome-backend indexer; direct RPC reads and curator transactions
 // will use @dome-security/registry-bindings once it is published to npm.
 
-export const NETWORK_LABEL: Record<StellarNetwork, string> = {
-  testnet: 'Stellar testnet',
-  mainnet: 'Stellar mainnet',
-};
+export const NETWORK_LABEL: Record<StellarNetwork, string> = m.network;
 
 const TX_HASH = /^[0-9a-f]{64}$/i;
 const CONTRACT_ID = /^C[A-Z2-7]{55}$/;
@@ -44,28 +42,10 @@ export function shortKey(value: string, keep = 4): string {
 }
 
 /** Contract error codes from dome-contracts errors.rs (append-only), in plain language. */
-export const CONTRACT_ERRORS: Record<number, string> = {
-  1: 'The approval threshold is too low.',
-  2: 'That address already has this role.',
-  3: 'That address does not have this role.',
-  4: 'This account is not a registered attester.',
-  5: 'The verdict is not one the registry accepts.',
-  6: 'The commit id is not a valid git commit.',
-  7: 'The scanner version is missing.',
-  8: 'The page size is out of range.',
-  9: 'This account is not a registered curator.',
-  10: 'The indicator kind is not one the registry accepts.',
-  11: 'An indicator with this hash already exists (retracted ones included).',
-  12: 'There is no indicator with this hash.',
-  13: 'You have already approved this indicator.',
-  14: 'This indicator has been retracted and can no longer change.',
-  15: 'There is no attestation at that position for this repository.',
-  16: 'This attestation has already been retracted.',
-  17: 'Only the original attester or the admin can retract this attestation.',
-};
+export const CONTRACT_ERRORS: Record<number, string> = m.contractErrors;
 
 export function contractErrorMessage(code: number): string {
-  return CONTRACT_ERRORS[code] ?? `The registry rejected the transaction (error ${code}).`;
+  return CONTRACT_ERRORS[code] ?? m.contractErrorOther(code);
 }
 
 /** The contract error code inside a simulation or submission failure (`Error(Contract, #N)`), if any. */
@@ -74,21 +54,10 @@ export function contractErrorCode(error: unknown): number | null {
   return match ? Number(match[1]) : null;
 }
 
-export const INDICATOR_KIND_TEXT: Record<string, string> = {
-  // Kinds in the backend index.
-  hash: 'File fingerprint',
-  marker: 'Campaign marker',
-  domain: 'Staging or C2 domain',
-  // Kinds in the contract.
-  task: 'Editor task file',
-  font: 'Fake font file',
-  config: 'Build config file',
-  script: 'Script',
-  package: 'npm package',
-};
+export const INDICATOR_KIND_TEXT: Record<string, string> = m.indicatorKind;
 
 export function indicatorKindLabel(kind: string): string {
-  return Object.hasOwn(INDICATOR_KIND_TEXT, kind) ? INDICATOR_KIND_TEXT[kind]! : 'Other';
+  return Object.hasOwn(INDICATOR_KIND_TEXT, kind) ? INDICATOR_KIND_TEXT[kind]! : m.indicatorKindOther;
 }
 
 export type ReportCheck = 'match' | 'mismatch' | 'unavailable';

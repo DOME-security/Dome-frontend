@@ -1,6 +1,7 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { useId, useState, type FormEvent } from 'react';
 import { HashField } from '../../components/HashField';
+import { m } from '../../i18n';
 import { WalletButton } from '../../components/WalletButton';
 import { isSha256 } from '../../lib/api';
 import { config, type StellarNetwork } from '../../lib/config';
@@ -22,31 +23,25 @@ const KINDS = ['task', 'font', 'config', 'script', 'package'] as const;
 const CAMPAIGN = /^[a-z0-9][a-z0-9-]{0,31}$/;
 type ActionType = CuratorAction['type'];
 
-const ACTION_LABEL: Record<ActionType, string> = {
-  propose: 'Propose an indicator',
-  approve: 'Approve an indicator',
-  retract: 'Retract an indicator',
-};
+const ACTION_LABEL: Record<ActionType, string> = m.curate.actions;
 
 /** Plain-language description of what one transaction will do. */
 export function describeAction(action: CuratorAction): string {
   switch (action.type) {
     case 'propose':
-      return `Propose a new known-bad file (${indicatorKindLabel(action.kind).toLowerCase()}, campaign "${action.campaign}"). Your proposal counts as the first approval; it becomes active only after other curators approve it.`;
+      return m.curate.describe.propose(indicatorKindLabel(action.kind).toLowerCase(), action.campaign);
     case 'approve':
-      return 'Approve this indicator. It becomes active, and is treated as known bad, once enough curators have approved it.';
+      return m.curate.describe.approve;
     case 'retract':
-      return 'Retract this indicator. It stops being treated as known bad but stays visible on the ledger as retracted, with your reason hash.';
+      return m.curate.describe.retract;
   }
 }
 
 function failureMessage(error: unknown): string {
   const code = contractErrorCode(error);
   if (code !== null) return contractErrorMessage(code);
-  if (error instanceof Error && /refused|declined|rejected|denied/i.test(error.message)) {
-    return 'The wallet did not sign. Nothing was sent.';
-  }
-  return 'The transaction could not be prepared or sent. Nothing was charged unless a transaction hash is shown.';
+  if (error instanceof Error && /refused|declined|rejected|denied/i.test(error.message)) return m.curate.errors.declined;
+  return m.curate.errors.failed;
 }
 
 function NetworkSwitch({
@@ -64,7 +59,7 @@ function NetworkSwitch({
   const mainnetAvailable = Boolean(config.networks.mainnet) || config.network === 'mainnet';
   return (
     <fieldset className={ui.fieldset}>
-      <legend>Network</legend>
+      <legend>{m.curate.networkLegend}</legend>
       <div className={styles.radios}>
         {(['testnet', 'mainnet'] as const).map((n) => (
           <label key={n}>
@@ -77,22 +72,19 @@ function NetworkSwitch({
               onChange={() => onChange(n)}
             />{' '}
             {NETWORK_LABEL[n]}
-            {n === 'testnet' && ' (default)'}
+            {n === 'testnet' && m.curate.defaultSuffix}
           </label>
         ))}
       </div>
-      {!mainnetAvailable && (
-        <p className={ui.hint}>The mainnet registry is not deployed yet; it waits for an independent review.</p>
-      )}
+      {!mainnetAvailable && <p className={ui.hint}>{m.curate.mainnetNotDeployed}</p>}
       {network === 'mainnet' && (
         <div role="alert" className={ui.warning}>
           <p>
-            <strong>Mainnet transactions are real and permanent.</strong> They cost real XLM and every curator action is public
-            forever. Practise on testnet first.
+            <strong>{m.curate.mainnetWarning}</strong> {m.curate.mainnetWarningBody}
           </p>
           <label htmlFor={ackId}>
-            <input id={ackId} type="checkbox" checked={acknowledged} onChange={(e) => onAcknowledge(e.target.checked)} /> I
-            understand and want to act on mainnet
+            <input id={ackId} type="checkbox" checked={acknowledged} onChange={(e) => onAcknowledge(e.target.checked)} />{' '}
+            {m.curate.mainnetAck}
           </label>
         </div>
       )}
@@ -114,46 +106,41 @@ function Summary({
   const { action } = prepared;
   return (
     <section aria-labelledby="summary-heading" className={`${ui.card} ${styles.summary}`}>
-      <h2 id="summary-heading">Check before you sign</h2>
+      <h2 id="summary-heading">{m.curate.summary.heading}</h2>
       <p>{describeAction(action)}</p>
       <dl className={ui.dl}>
-        <dt>Action</dt>
+        <dt>{m.curate.summary.action}</dt>
         <dd>{ACTION_LABEL[action.type]}</dd>
-        <dt>Indicator hash</dt>
+        <dt>{m.curate.summary.hash}</dt>
         <dd className={ui.mono}>{action.hash}</dd>
         {action.type === 'propose' && (
           <>
-            <dt>Kind</dt>
+            <dt>{m.curate.summary.kind}</dt>
             <dd>{indicatorKindLabel(action.kind)}</dd>
-            <dt>Evidence hash</dt>
+            <dt>{m.curate.summary.evidence}</dt>
             <dd className={ui.mono}>{action.evidence}</dd>
           </>
         )}
         {action.type === 'retract' && (
           <>
-            <dt>Reason hash</dt>
+            <dt>{m.curate.summary.reason}</dt>
             <dd className={ui.mono}>{action.reason}</dd>
           </>
         )}
-        <dt>Network</dt>
+        <dt>{m.curate.summary.network}</dt>
         <dd>{NETWORK_LABEL[prepared.network]}</dd>
-        <dt>Signed by</dt>
+        <dt>{m.curate.summary.signer}</dt>
         <dd className={ui.mono}>{prepared.source}</dd>
-        <dt>Maximum fee</dt>
-        <dd>
-          {stroopsToXlm(prepared.feeStroops)} XLM{prepared.network === 'testnet' ? ' (testnet XLM, no real value)' : ''}
-        </dd>
+        <dt>{m.curate.summary.fee}</dt>
+        <dd>{m.curate.summary.feeValue(stroopsToXlm(prepared.feeStroops), prepared.network === 'testnet')}</dd>
       </dl>
-      <p className={ui.hint}>
-        Your wallet will show the same transaction. Sign only if both match. Dome never asks for your secret key or recovery
-        phrase.
-      </p>
+      <p className={ui.hint}>{m.curate.summary.advice}</p>
       <div className={ui.row}>
         <button type="button" className={ui.button} onClick={onSign} disabled={signing}>
-          {signing ? 'Waiting for the wallet…' : 'Sign and send'}
+          {signing ? m.curate.waitingForWallet : m.curate.summary.sign}
         </button>
         <button type="button" className={ui.secondary} onClick={onCancel} disabled={signing}>
-          Cancel
+          {m.curate.summary.cancel}
         </button>
       </div>
     </section>
@@ -217,24 +204,23 @@ export function CuratePage() {
 
   const walletNetwork = wallet ? networkForPassphrase(wallet.networkPassphrase) : null;
   const blocked = !net
-    ? `The registry is not configured for ${NETWORK_LABEL[network]} in this build.`
+    ? m.curate.errors.notConfigured(NETWORK_LABEL[network])
     : network === 'mainnet' && !mainnetAck
-      ? 'Confirm that you want to act on mainnet first.'
+      ? m.curate.errors.confirmMainnet
       : !wallet
-        ? 'Connect your wallet first.'
+        ? m.curate.errors.connect
         : walletNetwork !== network
-          ? 'Switch your wallet to the same network first.'
+          ? m.curate.errors.switchNetwork
           : curator.data === false
-            ? `This account is not a curator on ${NETWORK_LABEL[network]}. The registry would reject the transaction.`
+            ? m.curate.errors.notCurator(NETWORK_LABEL[network])
             : null;
 
   function buildAction(): CuratorAction | string {
-    if (!isSha256(hash)) return 'Enter the SHA-256 fingerprint of the file.';
+    if (!isSha256(hash)) return m.curate.errors.hash;
     if (type === 'approve') return { type, hash };
-    if (type === 'retract')
-      return isSha256(reason) ? { type, hash, reason } : 'Enter the SHA-256 of the published retraction notice.';
-    if (!CAMPAIGN.test(campaign)) return 'Campaign labels are 1–32 characters: lowercase letters, digits and hyphens.';
-    if (!isSha256(evidence)) return 'Enter the SHA-256 of the published advisory or write-up.';
+    if (type === 'retract') return isSha256(reason) ? { type, hash, reason } : m.curate.errors.reason;
+    if (!CAMPAIGN.test(campaign)) return m.curate.errors.campaign;
+    if (!isSha256(evidence)) return m.curate.errors.evidence;
     return { type, hash, kind, campaign, evidence };
   }
 
@@ -254,20 +240,16 @@ export function CuratePage() {
 
   return (
     <div className={ui.page}>
-      <title>Curator console · Dome</title>
-      <h1>Curator console</h1>
-      <p className={ui.lead}>
-        Curators add fingerprints of confirmed malicious files to the Dome Registry. An indicator only becomes active after
-        several curators approve it, so one mistaken or stolen key cannot add a file on its own.
-      </p>
+      <title>{m.app.titleSuffix(m.curate.title)}</title>
+      <h1>{m.curate.title}</h1>
+      <p className={ui.lead}>{m.curate.lead}</p>
       <p className={ui.hint}>
-        Each button builds exactly one transaction and shows you what it does before your wallet asks you to sign. Dome never asks
-        for, sees or stores your secret key.
+        {m.curate.oneTx}
         {contract && (
           <>
             {' '}
             <a href={contract} target="_blank" rel="noreferrer">
-              View the registry contract
+              {m.curate.viewContract}
             </a>
             .
           </>
@@ -295,17 +277,17 @@ export function CuratePage() {
       />
       {connect.isError && (
         <p role="alert" className={ui.warning}>
-          The wallet did not connect. Open {walletInfo.data?.name ?? 'Freighter'}, unlock it and try again.
+          {m.curate.connectFailed(walletInfo.data?.name ?? 'Freighter')}
         </p>
       )}
 
       {sent && (
         <div role="status" className={`${ui.card} ${styles.sent}`}>
           <p>
-            <strong>Sent.</strong> The transaction is on {NETWORK_LABEL[sent.network]}.{' '}
+            <strong>{m.curate.sent}</strong> {m.curate.sentOn(NETWORK_LABEL[sent.network])}{' '}
             {sentUrl && (
               <a href={sentUrl} target="_blank" rel="noreferrer">
-                View it on stellar.expert
+                {m.curate.viewSent}
               </a>
             )}
           </p>
@@ -325,7 +307,7 @@ export function CuratePage() {
       ) : (
         <form onSubmit={onReview} noValidate className={ui.stack}>
           <fieldset className={ui.fieldset}>
-            <legend>Action</legend>
+            <legend>{m.curate.actionLegend}</legend>
             <div className={styles.radios}>
               {(Object.keys(ACTION_LABEL) as ActionType[]).map((t) => (
                 <label key={t}>
@@ -336,18 +318,13 @@ export function CuratePage() {
             </div>
           </fieldset>
 
-          <HashField
-            label="File fingerprint (SHA-256)"
-            hint="The fingerprint of the malicious file."
-            value={hash}
-            onChange={setHash}
-          />
+          <HashField label={m.curate.fileHash} hint={m.curate.fileHashHint} value={hash} onChange={setHash} />
 
           {type === 'propose' && (
             <>
               <div>
                 <label htmlFor={kindId} className={ui.label}>
-                  Kind of file
+                  {m.curate.kind}
                 </label>
                 <select id={kindId} className={ui.input} value={kind} onChange={(e) => setKind(e.target.value as typeof kind)}>
                   {KINDS.map((k) => (
@@ -359,7 +336,7 @@ export function CuratePage() {
               </div>
               <div>
                 <label htmlFor={campaignId} className={ui.label}>
-                  Campaign label
+                  {m.curate.campaign}
                 </label>
                 <input
                   id={campaignId}
@@ -370,24 +347,14 @@ export function CuratePage() {
                   value={campaign}
                   onChange={(e) => setCampaign(e.target.value.trim().toLowerCase())}
                 />
-                <p className={ui.hint}>Lowercase, e.g. polinrider or unknown. Labels describe attacks, never people.</p>
+                <p className={ui.hint}>{m.curate.campaignHint}</p>
               </div>
-              <HashField
-                label="Evidence hash (SHA-256)"
-                hint="Publish the advisory or write-up first, then use the SHA-256 of that document."
-                value={evidence}
-                onChange={setEvidence}
-              />
+              <HashField label={m.curate.evidenceHash} hint={m.curate.evidenceHint} value={evidence} onChange={setEvidence} />
             </>
           )}
 
           {type === 'retract' && (
-            <HashField
-              label="Reason hash (SHA-256)"
-              hint="Publish a short retraction notice first, then use the SHA-256 of that notice."
-              value={reason}
-              onChange={setReason}
-            />
+            <HashField label={m.curate.reasonHash} hint={m.curate.reasonHint} value={reason} onChange={setReason} />
           )}
 
           {(formError || blocked) && (
@@ -403,7 +370,7 @@ export function CuratePage() {
 
           <div>
             <button type="submit" className={ui.button} disabled={Boolean(blocked) || prepare.isPending}>
-              {prepare.isPending ? 'Preparing…' : 'Review transaction'}
+              {prepare.isPending ? m.curate.preparing : m.curate.review}
             </button>
           </div>
         </form>

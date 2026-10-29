@@ -1,4 +1,5 @@
 import { useId, useState, type DragEvent } from 'react';
+import { m } from '../i18n';
 import styles from './FileDropzone.module.css';
 
 interface Props {
@@ -41,10 +42,8 @@ export function FileDropzone({ onFile, disabled, maxMb }: Props) {
         }}
       />
       <label htmlFor={id} className={styles.label}>
-        <strong>Choose a file</strong> or drop it here
-        <span className={styles.hint}>
-          Up to {maxMb} MB. The file stays on your device; only its SHA-256 fingerprint is looked up.
-        </span>
+        <strong>{m.checkFile.choose}</strong> {m.checkFile.orDrop}
+        <span className={styles.hint}>{m.checkFile.dropHint(maxMb)}</span>
       </label>
     </div>
   );

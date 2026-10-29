@@ -1,4 +1,5 @@
 import { useLoaderData } from 'react-router';
+import { m } from '../../i18n';
 import { SafeMarkdown } from '../../components/SafeMarkdown';
 import type { MarkdownDoc } from '../../lib/markdown';
 import ui from '../../styles/ui.module.css';
@@ -9,12 +10,12 @@ export function GuidePage() {
   const toc = rest.filter((b) => b.type === 'heading' && b.level === 2);
   return (
     <article className={ui.page}>
-      <title>{`${guide.title} · Dome`}</title>
+      <title>{m.app.titleSuffix(guide.title)}</title>
       <h1>{guide.title}</h1>
       {intro && <SafeMarkdown blocks={[intro]} />}
       {toc.length > 2 && (
-        <nav aria-label="On this page" className={ui.card}>
-          <strong>On this page</strong>
+        <nav aria-label={m.guides.toc} className={ui.card}>
+          <strong>{m.guides.toc}</strong>
           <ul>
             {toc.map((h) =>
               h.type === 'heading' ? (

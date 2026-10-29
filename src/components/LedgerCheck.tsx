@@ -1,3 +1,4 @@
+import { m } from '../i18n';
 import { config } from '../lib/config';
 import { NETWORK_LABEL } from '../lib/registry';
 import type { LedgerCheck as Check } from '../lib/stellar/useLedgerCheck';
@@ -10,13 +11,13 @@ export function LedgerCheck({ check, subject }: { check: Check; subject: string 
     case 'checking':
       return (
         <p role="status" className={styles.note}>
-          Checking {subject} against the {network} ledger…
+          {m.ledger.checking(subject, network)}
         </p>
       );
     case 'match':
       return (
         <p role="status" className={`${styles.note} ${styles.match}`}>
-          <span aria-hidden="true">✓</span> Verified: {subject} matches the {network} ledger.
+          <span aria-hidden="true">✓</span> {m.ledger.match(subject, network)}
         </p>
       );
     case 'mismatch':
@@ -24,9 +25,9 @@ export function LedgerCheck({ check, subject }: { check: Check; subject: string 
         <div role="alert" className={`${styles.note} ${styles.mismatch}`}>
           <p>
             <strong>
-              <span aria-hidden="true">✗</span> The {network} ledger disagrees with the Dome API.
+              <span aria-hidden="true">✗</span> {m.ledger.mismatch(network)}
             </strong>{' '}
-            Trust the ledger, and treat this page with suspicion until it is fixed.
+            {m.ledger.mismatchAdvice}
           </p>
           <ul>
             {check.differences.map((d) => (
@@ -38,13 +39,13 @@ export function LedgerCheck({ check, subject }: { check: Check; subject: string 
     case 'unavailable':
       return (
         <p role="status" className={styles.note}>
-          Could not reach Stellar to verify {subject}. What you see comes from the Dome API only.
+          {m.ledger.unavailable(subject)}
         </p>
       );
     case 'not-configured':
       return (
         <p role="status" className={styles.note}>
-          Ledger verification is not configured for this build.
+          {m.ledger.notConfigured}
         </p>
       );
   }

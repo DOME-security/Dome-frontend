@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { m } from '../../i18n';
 import { Link, useParams } from 'react-router';
 import { EvidenceLinks } from '../../components/ExternalLinks';
 import { LedgerCheck } from '../../components/LedgerCheck';
@@ -9,12 +10,6 @@ import { compareIndicator, type ChainIndicator } from '../../lib/stellar/spotche
 import { useLedgerCheck } from '../../lib/stellar/useLedgerCheck';
 import ui from '../../styles/ui.module.css';
 import { NotFoundPage } from '../not-found/NotFoundPage';
-
-const STATUS_TEXT: Record<string, string> = {
-  proposed: 'Proposed: waiting for more curator approvals. Not yet treated as known bad.',
-  active: 'Active: approved by enough curators. Treated as known bad.',
-  retracted: 'Retracted: a curator withdrew it. Kept visible so the mistake stays on record.',
-};
 
 function Account({ id }: { id: string }) {
   const href = accountUrl(id);
@@ -30,17 +25,17 @@ function Account({ id }: { id: string }) {
 function LedgerRecord({ indicator }: { indicator: ChainIndicator }) {
   return (
     <section aria-labelledby="ledger-heading">
-      <h2 id="ledger-heading">On the ledger</h2>
+      <h2 id="ledger-heading">{m.indicator.onLedger}</h2>
       <dl className={ui.dl}>
-        <dt>Status</dt>
-        <dd>{STATUS_TEXT[indicator.status] ?? 'Unknown status'}</dd>
-        <dt>Kind</dt>
+        <dt>{m.indicator.status}</dt>
+        <dd>{m.indicator.statusText[indicator.status] ?? m.indicator.unknownStatus}</dd>
+        <dt>{m.indicator.kind}</dt>
         <dd>{indicatorKindLabel(indicator.kind)}</dd>
-        <dt>Campaign</dt>
+        <dt>{m.indicator.campaign}</dt>
         <dd className={ui.mono}>{indicator.campaign}</dd>
-        <dt>Proposed</dt>
+        <dt>{m.indicator.proposed}</dt>
         <dd>{new Date(indicator.proposedAt * 1000).toISOString().slice(0, 10)}</dd>
-        <dt>Approvals</dt>
+        <dt>{m.indicator.approvals}</dt>
         <dd>
           {indicator.approvals.length}
           <ol>
@@ -51,15 +46,15 @@ function LedgerRecord({ indicator }: { indicator: ChainIndicator }) {
             ))}
           </ol>
         </dd>
-        <dt>Evidence hash</dt>
+        <dt>{m.indicator.evidenceHash}</dt>
         <dd className={ui.mono}>{indicator.evidence}</dd>
         {indicator.retractedBy && (
           <>
-            <dt>Retracted by</dt>
+            <dt>{m.indicator.retractedBy}</dt>
             <dd>
               <Account id={indicator.retractedBy} />
             </dd>
-            <dt>Reason hash</dt>
+            <dt>{m.indicator.reasonHash}</dt>
             <dd className={ui.mono}>{indicator.retractReason}</dd>
           </>
         )}
@@ -88,46 +83,45 @@ export function IndicatorPage() {
   const tx = data?.known ? txUrl(data.txHash) : null;
   return (
     <div className={ui.page}>
-      <title>Indicator · Dome</title>
+      <title>{m.app.titleSuffix(m.indicator.title)}</title>
       <p>
-        <Link to="/registry">← Registry</Link>
+        <Link to="/registry">{m.indicator.back}</Link>
       </p>
-      <h1>Indicator</h1>
+      <h1>{m.indicator.title}</h1>
       <p className={ui.mono}>{hash}</p>
       {isPending && <Loading />}
       {error && <ErrorMessage error={error} />}
-      {data && <LedgerCheck check={ledger.check} subject="this indicator" />}
+      {data && <LedgerCheck check={ledger.check} subject={m.indicator.subject} />}
       {data &&
         (data.known ? (
           <dl className={ui.dl}>
-            <dt>Status</dt>
+            <dt>{m.indicator.status}</dt>
             <dd>
-              <strong>Active</strong>: known bad
+              <strong>{m.indicator.active}</strong>: {m.indicator.knownBad}
             </dd>
-            <dt>Campaign</dt>
+            <dt>{m.indicator.campaign}</dt>
             <dd className={ui.mono}>{data.campaign}</dd>
-            <dt>Evidence</dt>
+            <dt>{m.indicator.evidence}</dt>
             <dd>
               <EvidenceLinks urls={data.evidence} />
             </dd>
-            <dt>Ledger</dt>
+            <dt>{m.indicator.ledger}</dt>
             <dd>{data.ledger}</dd>
-            <dt>Transaction</dt>
+            <dt>{m.indicator.transaction}</dt>
             <dd>
               {tx ? (
                 <a href={tx} target="_blank" rel="noreferrer" className={ui.mono}>
                   {data.txHash.slice(0, 16)}…
                 </a>
               ) : (
-                <span className={ui.muted}>Not available</span>
+                <span className={ui.muted}>{m.indicator.notAvailable}</span>
               )}
             </dd>
           </dl>
         ) : (
           <div className={ui.card}>
             <p>
-              <strong>Not an active indicator.</strong> No active entry in the Dome Registry has this fingerprint. It may never
-              have been proposed, may still be waiting for approvals, or may have been retracted.
+              <strong>{m.indicator.notActive}</strong> {m.indicator.notActiveBody}
             </p>
           </div>
         ))}

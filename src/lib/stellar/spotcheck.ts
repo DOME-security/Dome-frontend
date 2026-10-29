@@ -1,4 +1,7 @@
+import { m } from '../../i18n';
 import type { IndicatorLookup, OnChainAttestation } from '../types';
+
+const diff = m.ledger.diff;
 
 // Pure comparisons between what the backend indexer says and what the
 // Stellar ledger says. The chain is the source of truth.
@@ -36,25 +39,23 @@ export type SpotCheck =
 export function compareIndicator(backend: IndicatorLookup, chain: ChainIndicator | null): SpotCheck {
   const chainActive = chain?.status === 'active';
   const differences: string[] = [];
-  if (backend.known && !chain) differences.push('The ledger has no indicator with this fingerprint.');
-  else if (backend.known && !chainActive) differences.push(`The ledger says this indicator is ${chain!.status}, not active.`);
-  else if (!backend.known && chainActive)
-    differences.push('The ledger says this indicator is active, but the Dome API does not list it.');
-  if (backend.known && chain && backend.campaign !== chain.campaign)
-    differences.push('The campaign label differs from the ledger.');
+  if (backend.known && !chain) differences.push(diff.noIndicator);
+  else if (backend.known && !chainActive) differences.push(diff.indicatorStatus(chain!.status));
+  else if (!backend.known && chainActive) differences.push(diff.indicatorUnlisted);
+  if (backend.known && chain && backend.campaign !== chain.campaign) differences.push(diff.campaign);
   return differences.length ? { state: 'mismatch', differences } : { state: 'match' };
 }
 
 /** Compares the indexed attestation with the ledger's latest one for the repository. */
 export function compareAttestation(backend: OnChainAttestation | null, chain: ChainAttestation | null): SpotCheck {
   if (!backend && !chain) return { state: 'match' };
-  if (!chain) return { state: 'mismatch', differences: ['The ledger has no attestation for this repository.'] };
-  if (!backend) return { state: 'mismatch', differences: ['The ledger has an attestation the Dome API does not show.'] };
+  if (!chain) return { state: 'mismatch', differences: [diff.noAttestation] };
+  if (!backend) return { state: 'mismatch', differences: [diff.extraAttestation] };
   const differences: string[] = [];
-  if (chain.retractedBy) differences.push('The ledger says this attestation was retracted.');
-  if (backend.commit.toLowerCase() !== chain.commit) differences.push('The commit differs from the ledger.');
-  if (backend.verdict !== chain.verdict) differences.push('The verdict differs from the ledger.');
-  if (backend.reportHash.toLowerCase() !== chain.report) differences.push('The report hash differs from the ledger.');
+  if (chain.retractedBy) differences.push(diff.retracted);
+  if (backend.commit.toLowerCase() !== chain.commit) differences.push(diff.commit);
+  if (backend.verdict !== chain.verdict) differences.push(diff.verdict);
+  if (backend.reportHash.toLowerCase() !== chain.report) differences.push(diff.reportHash);
   return differences.length ? { state: 'mismatch', differences } : { state: 'match' };
 }
 
@@ -62,6 +63,6 @@ export function compareAttestation(backend: OnChainAttestation | null, chain: Ch
 export function compareKnownBad(results: { hash: string; knownBad: boolean }[]): SpotCheck {
   const missing = results.filter((r) => !r.knownBad);
   return missing.length
-    ? { state: 'mismatch', differences: missing.map((r) => `${r.hash.slice(0, 12)}… is not active on the ledger.`) }
+    ? { state: 'mismatch', differences: missing.map((r) => diff.notActive(r.hash.slice(0, 12))) }
     : { state: 'match' };
 }

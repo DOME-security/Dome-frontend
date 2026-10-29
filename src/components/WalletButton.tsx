@@ -1,4 +1,5 @@
 import type { StellarNetwork } from '../lib/config';
+import { m } from '../i18n';
 import { NETWORK_LABEL, shortKey } from '../lib/registry';
 import { networkForPassphrase } from '../lib/stellar/networks';
 import type { WalletState } from '../lib/stellar/types';
@@ -20,11 +21,11 @@ export function WalletButton({ walletName, available, state, connecting, expecte
     return (
       <div className={ui.warning}>
         <p>
-          <strong>{walletName} is not installed in this browser.</strong> Install it from{' '}
+          <strong>{m.curate.walletNotInstalled(walletName)}</strong> {m.curate.walletInstallBefore}{' '}
           <a href="https://www.freighter.app" target="_blank" rel="noreferrer">
-            freighter.app
+            {m.curate.walletSite}
           </a>
-          , create a testnet account, then reload this page. Use a browser profile with no wallet holding real funds.
+          {m.curate.walletInstallAfter}
         </p>
       </div>
     );
@@ -32,7 +33,7 @@ export function WalletButton({ walletName, available, state, connecting, expecte
   if (!state) {
     return (
       <button type="button" className={ui.button} onClick={onConnect} disabled={connecting || available === undefined}>
-        {connecting ? 'Waiting for the wallet…' : `Connect ${walletName}`}
+        {connecting ? m.curate.waitingForWallet : m.curate.connect(walletName)}
       </button>
     );
   }
@@ -40,17 +41,20 @@ export function WalletButton({ walletName, available, state, connecting, expecte
   return (
     <div className={styles.connected}>
       <dl className={ui.dl}>
-        <dt>Account</dt>
+        <dt>{m.curate.account}</dt>
         <dd className={ui.mono} title={state.address}>
           {shortKey(state.address, 6)}
         </dd>
-        <dt>Wallet network</dt>
-        <dd>{walletNetwork ? NETWORK_LABEL[walletNetwork] : 'A network Dome does not use'}</dd>
+        <dt>{m.curate.walletNetwork}</dt>
+        <dd>{walletNetwork ? NETWORK_LABEL[walletNetwork] : m.curate.unknownNetwork}</dd>
       </dl>
       {walletNetwork !== expected && (
         <p role="alert" className={ui.warning}>
-          Your wallet is set to {walletNetwork ? NETWORK_LABEL[walletNetwork] : 'another network'}, but this console is on{' '}
-          {NETWORK_LABEL[expected]}. Switch the network in {walletName} before signing.
+          {m.curate.networkMismatch(
+            walletNetwork ? NETWORK_LABEL[walletNetwork] : m.curate.anotherNetwork,
+            NETWORK_LABEL[expected],
+            walletName,
+          )}
         </p>
       )}
     </div>

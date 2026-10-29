@@ -1,10 +1,11 @@
 import type { ScanStatus } from '../lib/types';
+import { m } from '../i18n';
 import styles from './ScanProgress.module.css';
 
 const STEPS: { status: ScanStatus; label: string }[] = [
-  { status: 'queued', label: 'Queued' },
-  { status: 'running', label: 'Scanning (Dome reads files; it never runs them)' },
-  { status: 'done', label: 'Report ready' },
+  { status: 'queued', label: m.scanProgress.queued },
+  { status: 'running', label: m.scanProgress.running },
+  { status: 'done', label: m.scanProgress.done },
 ];
 
 const ORDER: Record<ScanStatus, number> = { queued: 0, running: 1, done: 2, failed: 2 };
@@ -25,7 +26,7 @@ export function ScanProgress({ status }: { status: ScanStatus }) {
         ))}
       </ol>
       <p role="status" aria-live="polite" className="visually-hidden">
-        {status === 'queued' ? 'Scan queued.' : status === 'running' ? 'Scan running.' : ''}
+        {status === 'queued' ? m.scanProgress.queuedAnnouncement : status === 'running' ? m.scanProgress.runningAnnouncement : ''}
       </p>
     </div>
   );

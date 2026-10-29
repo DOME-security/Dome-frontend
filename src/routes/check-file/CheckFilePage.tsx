@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { m } from '../../i18n';
 import { useId, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 import { EvidenceLinks } from '../../components/ExternalLinks';
@@ -16,63 +17,54 @@ interface Target {
   file?: { name: string; size: number };
 }
 
-function formatSize(bytes: number): string {
-  if (bytes < 1024) return `${bytes} bytes`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
-}
-
 function LookupResult({ target }: { target: Target }) {
   const { data, error, isPending } = useQuery({
     queryKey: ['indicator', target.sha256],
     queryFn: () => api.getIndicator(target.sha256),
   });
-  if (isPending) return <Loading label="Looking up the fingerprint…" />;
+  if (isPending) return <Loading label={m.checkFile.lookingUp} />;
   if (error) return <ErrorMessage error={error} />;
 
   const tx = data.known ? txUrl(data.txHash) : null;
   return (
-    <section aria-label="Result">
+    <section aria-label={m.checkFile.resultLabel}>
       {data.known ? (
         <>
           <VerdictBanner verdict="block" />
           <p>
-            <strong>This exact file is on the Dome Registry&apos;s known-bad list.</strong> Do not open or run it. If it came from
-            a repository you opened, follow <Link to="/guides/infected">I think I was infected</Link>.
+            <strong>{m.checkFile.knownBad}</strong> {m.checkFile.knownBadAdvice}{' '}
+            <Link to="/guides/infected">{m.home.more[0]!.link}</Link>.
           </p>
           <dl className={ui.dl}>
-            <dt>Campaign</dt>
+            <dt>{m.checkFile.campaign}</dt>
             <dd className={ui.mono}>{data.campaign}</dd>
-            <dt>Evidence</dt>
+            <dt>{m.checkFile.evidence}</dt>
             <dd>
               <EvidenceLinks urls={data.evidence} />
             </dd>
-            <dt>Recorded on chain</dt>
+            <dt>{m.checkFile.recorded}</dt>
             <dd>
-              Ledger {data.ledger}
+              {m.checkFile.ledger(data.ledger)}
               {tx && (
                 <>
                   {' · '}
                   <a href={tx} target="_blank" rel="noreferrer">
-                    View transaction
+                    {m.checkFile.viewTx}
                   </a>
                 </>
               )}
             </dd>
           </dl>
           <p>
-            <Link to={`/registry/indicator/${target.sha256}`}>Indicator details</Link>
+            <Link to={`/registry/indicator/${target.sha256}`}>{m.checkFile.details}</Link>
           </p>
         </>
       ) : (
         <div className={ui.card}>
-          <h2>Not on the known-bad list</h2>
+          <h2>{m.checkFile.notListed}</h2>
+          <p>{m.checkFile.notListedBody}</p>
           <p>
-            This exact file has not been recorded as malicious. A file can still be harmful if it is new or slightly changed, so
-            check the repository it came from as well.
-          </p>
-          <p>
-            <Link to="/check/repo">Check the repository</Link>
+            <Link to="/check/repo">{m.checkFile.checkRepo}</Link>
           </p>
         </div>
       )}
@@ -111,7 +103,7 @@ export function CheckFilePage() {
     event.preventDefault();
     const value = pasted.trim().toLowerCase();
     if (!isSha256(value)) {
-      setPasteError('A SHA-256 fingerprint is 64 characters, 0-9 and a-f.');
+      setPasteError(m.checkFile.invalidHash);
       return;
     }
     setPasteError(null);
@@ -121,23 +113,24 @@ export function CheckFilePage() {
 
   return (
     <div className={ui.page}>
-      <title>Check a file · Dome</title>
-      <h1>Check a file</h1>
+      <title>{m.app.titleSuffix(m.checkFile.title)}</title>
+      <h1>{m.checkFile.title}</h1>
       <p className={ui.lead}>
-        Got a suspicious <code>tasks.json</code>, font or config file? Dome computes its fingerprint in your browser and checks it
-        against files confirmed as malicious. The file is never uploaded.
+        {m.checkFile.leadBefore}
+        <code>tasks.json</code>
+        {m.checkFile.leadAfter}
       </p>
 
       <FileDropzone onFile={onFile} disabled={hashing} maxMb={MAX_HASH_MB} />
-      {hashing && <Loading label="Computing the fingerprint on your device…" />}
+      {hashing && <Loading label={m.checkFile.hashing} />}
       {hashError !== null && <ErrorMessage error={hashError} />}
 
       <details>
-        <summary>Already have a SHA-256 fingerprint?</summary>
+        <summary>{m.checkFile.havePasted}</summary>
         <form onSubmit={onPaste} noValidate className={ui.row}>
           <div className={ui.grow}>
             <label htmlFor={hashInputId} className={ui.label}>
-              SHA-256
+              {m.checkFile.hashLabel}
             </label>
             <input
               id={hashInputId}
@@ -149,7 +142,7 @@ export function CheckFilePage() {
             />
           </div>
           <button type="submit" className={ui.secondary}>
-            Look up
+            {m.checkFile.lookUp}
           </button>
         </form>
         {pasteError && (
@@ -164,13 +157,13 @@ export function CheckFilePage() {
           <dl className={ui.dl}>
             {target.file && (
               <>
-                <dt>File</dt>
+                <dt>{m.checkFile.fileLabel}</dt>
                 <dd className={ui.mono}>
-                  {target.file.name} ({formatSize(target.file.size)})
+                  {target.file.name} ({m.checkFile.size(target.file.size)})
                 </dd>
               </>
             )}
-            <dt>SHA-256</dt>
+            <dt>{m.checkFile.hashLabel}</dt>
             <dd className={ui.mono}>{target.sha256}</dd>
           </dl>
           <LookupResult key={target.sha256} target={target} />

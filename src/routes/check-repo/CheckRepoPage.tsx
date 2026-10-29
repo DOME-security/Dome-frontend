@@ -1,4 +1,5 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
+import { m } from '../../i18n';
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { ReportView } from '../../components/ReportView';
@@ -30,7 +31,7 @@ function ScanResult({ id }: { id: string }) {
   });
   const gaveUp = scan && !isTerminal(scan.status) && nextPollDelay(scan.status, 0, Date.now() - startedAt.current) === false;
 
-  if (isPending) return <Loading label="Loading scan…" />;
+  if (isPending) return <Loading label={m.checkRepo.loadingScan} />;
   if (error) return <ErrorMessage error={error} />;
 
   const { owner, repo } = scan.repository;
@@ -44,22 +45,22 @@ function ScanResult({ id }: { id: string }) {
       <p className={ui.muted}>
         {scan.commit ? (
           <>
-            Commit <span className={ui.mono}>{scan.commit.slice(0, 12)}</span>
+            {m.checkRepo.commit} <span className={ui.mono}>{scan.commit.slice(0, 12)}</span>
           </>
         ) : (
-          'Default branch'
+          m.checkRepo.defaultBranch
         )}
         {scan.ref ? (
           <>
             {' '}
-            on <span className={ui.mono}>{scan.ref}</span>
+            {m.checkRepo.on} <span className={ui.mono}>{scan.ref}</span>
           </>
         ) : null}
       </p>
       {!isTerminal(scan.status) && <ScanProgress status={scan.status} />}
       {gaveUp && (
         <div role="status" className={ui.card}>
-          <p>This scan is taking longer than usual. It is still not a result: do not open the repository yet.</p>
+          <p>{m.checkRepo.slow}</p>
           <button
             type="button"
             className={ui.secondary}
@@ -69,15 +70,14 @@ function ScanResult({ id }: { id: string }) {
               void refetch();
             }}
           >
-            Check again
+            {m.checkRepo.checkAgain}
           </button>
         </div>
       )}
       {scan.status === 'failed' && (
         <div role="alert" className={ui.card}>
           <p>
-            <strong>The scan could not finish.</strong> This is not a clean result. Try again later, and do not open the
-            repository until a scan completes.
+            <strong>{m.checkRepo.failed}</strong> {m.checkRepo.failedAdvice}
           </p>
         </div>
       )}
@@ -86,7 +86,7 @@ function ScanResult({ id }: { id: string }) {
       )}
       {scan.status === 'done' && (
         <p>
-          <Link to={`/repos/${owner}/${repo}`}>Repository history and on-chain attestation</Link>
+          <Link to={`/repos/${owner}/${repo}`}>{m.checkRepo.history}</Link>
         </p>
       )}
     </section>
@@ -114,12 +114,12 @@ export function CheckRepoPage() {
     event.preventDefault();
     const parsed = parseGitHubRepo(url);
     if (!parsed) {
-      setInputError('Enter a public GitHub repository, like https://github.com/owner/repo.');
+      setInputError(m.checkRepo.invalidUrl);
       return;
     }
     const gitRef = ref.trim();
     if (gitRef && !GIT_REF.test(gitRef)) {
-      setInputError('That branch or tag name is not valid.');
+      setInputError(m.checkRepo.invalidRef);
       return;
     }
     setInputError(null);
@@ -128,18 +128,15 @@ export function CheckRepoPage() {
 
   return (
     <div className={ui.wide}>
-      <title>Check a repo · Dome</title>
+      <title>{m.app.titleSuffix(m.checkRepo.title)}</title>
       <div className={ui.page}>
-        <h1>Check a repo</h1>
-        <p className={ui.lead}>
-          Paste a public GitHub link. Dome reads the repository on its servers, without running anything, and shows what would run
-          when you open, install or build it.
-        </p>
+        <h1>{m.checkRepo.title}</h1>
+        <p className={ui.lead}>{m.checkRepo.lead}</p>
         <form onSubmit={onSubmit} noValidate className={ui.card}>
           <div className={ui.row}>
             <div className={ui.grow}>
               <label htmlFor={urlId} className={ui.label}>
-                GitHub repository
+                {m.checkRepo.urlLabel}
               </label>
               <input
                 id={urlId}
@@ -148,7 +145,7 @@ export function CheckRepoPage() {
                 inputMode="url"
                 autoComplete="off"
                 spellCheck={false}
-                placeholder="https://github.com/owner/repo"
+                placeholder={m.checkRepo.urlPlaceholder}
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
                 aria-invalid={inputError ? true : undefined}
@@ -157,7 +154,7 @@ export function CheckRepoPage() {
             </div>
             <div>
               <label htmlFor={refId} className={ui.label}>
-                Branch or tag <span className={ui.muted}>(optional)</span>
+                {m.checkRepo.refLabel} <span className={ui.muted}>{m.checkRepo.optional}</span>
               </label>
               <input
                 id={refId}
@@ -170,7 +167,7 @@ export function CheckRepoPage() {
               />
             </div>
             <button type="submit" className={ui.button} disabled={create.isPending}>
-              {create.isPending ? 'Starting…' : 'Check'}
+              {create.isPending ? m.checkRepo.submitting : m.checkRepo.submit}
             </button>
           </div>
           {inputError && (

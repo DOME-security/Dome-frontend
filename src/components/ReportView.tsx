@@ -1,4 +1,5 @@
 import { fileUrl } from '../lib/github';
+import { m } from '../i18n';
 import { parseInline, safeHref } from '../lib/markdown';
 import { describeRule, HONESTY_NOTICE, INCOMPLETE_TEXT, reasonText, SEVERITY_ORDER } from '../lib/rules';
 import type { Finding, Repository, ScanReport } from '../lib/types';
@@ -23,7 +24,7 @@ function sortFindings(findings: Finding[]): Finding[] {
 }
 
 function FindingLocations({ finding, repository, commit }: { finding: Finding } & Omit<Props, 'report'>) {
-  if (!finding.locations.length) return <span className={ui.muted}>Whole repository</span>;
+  if (!finding.locations.length) return <span className={ui.muted}>{m.report.wholeRepo}</span>;
   return (
     <ul className={styles.locations}>
       {finding.locations.map((loc, i) => {
@@ -61,12 +62,12 @@ export function ReportView({ report, repository, commit }: Props) {
       {counted.length > 0 ? (
         <div className={ui.tableWrap}>
           <table className={ui.table}>
-            <caption className="visually-hidden">Findings, most serious first</caption>
+            <caption className="visually-hidden">{m.report.caption}</caption>
             <thead>
               <tr>
-                <th scope="col">Level</th>
-                <th scope="col">What Dome found</th>
-                <th scope="col">Where</th>
+                <th scope="col">{m.report.columns.level}</th>
+                <th scope="col">{m.report.columns.what}</th>
+                <th scope="col">{m.report.columns.where}</th>
               </tr>
             </thead>
             <tbody>
@@ -84,7 +85,7 @@ export function ReportView({ report, repository, commit }: Props) {
                       </p>
                       {rule.why && (
                         <details className={styles.why}>
-                          <summary>Why this matters</summary>
+                          <summary>{m.report.whyItMatters}</summary>
                           <p>{rule.why}</p>
                           {rule.references.length > 0 && (
                             <ul>
@@ -120,25 +121,18 @@ export function ReportView({ report, repository, commit }: Props) {
           </table>
         </div>
       ) : (
-        <p>No findings.</p>
+        <p>{m.report.noFindings}</p>
       )}
 
-      {ignored > 0 && (
-        <p className={ui.hint}>
-          {ignored} {ignored === 1 ? 'finding was' : 'findings were'} in test fixtures or allowed by the repository&apos;s
-          hash-pinned Dome config, and did not affect the verdict.
-        </p>
-      )}
+      {ignored > 0 && <p className={ui.hint}>{m.report.ignored(ignored)}</p>}
 
       {report.incomplete.length > 0 && (
         <details className={styles.incomplete}>
-          <summary>
-            {report.incomplete.length} {report.incomplete.length === 1 ? 'file' : 'files'} could not be read
-          </summary>
+          <summary>{m.report.unreadable(report.incomplete.length)}</summary>
           <ul>
             {report.incomplete.map((item, i) => (
               <li key={i}>
-                <span className={ui.mono}>{item.path}</span>: {INCOMPLETE_TEXT[item.reason] ?? 'Could not be read'}
+                <span className={ui.mono}>{item.path}</span>: {INCOMPLETE_TEXT[item.reason] ?? m.incomplete['read-error']}
               </li>
             ))}
           </ul>
@@ -146,8 +140,13 @@ export function ReportView({ report, repository, commit }: Props) {
       )}
 
       <p className={ui.hint}>
-        {report.scope === 'diff' ? 'Changes scanned' : 'Full repository scanned'}: {report.stats.filesInScope} of{' '}
-        {report.stats.filesInTree} files, {report.stats.rulesRun} rules, Dome {report.tool.version}.
+        {m.report.stats(
+          report.scope,
+          report.stats.filesInScope,
+          report.stats.filesInTree,
+          report.stats.rulesRun,
+          report.tool.version,
+        )}
       </p>
 
       <p className={styles.notice}>{HONESTY_NOTICE}</p>
