@@ -1,10 +1,11 @@
 import { screen } from '@testing-library/react';
 import { http, HttpResponse } from 'msw';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import { reportHash } from '../../lib/hash';
 import { COMMIT, repoSummary, scan } from '../../test/fixtures';
 import { renderRoute } from '../../test/render';
 import { sentRequests } from '../../test/server';
+import { fakeChain, useFakes } from '../../test/services';
 
 const PATH = '/v1/repos/dome-security/demo-repo';
 
@@ -66,5 +67,48 @@ describe('/repos/:owner/:repo', () => {
     renderRoute('/repos/-bad-/x');
     expect(await screen.findByRole('heading', { name: 'Page not found' })).toBeInTheDocument();
     expect(sentRequests).toHaveLength(0);
+  });
+
+  it('verifies the indexed attestation against the ledger', async () => {
+    const att = await attestation();
+    const latestAttestation = vi.fn(() =>
+      Promise.resolve({
+        commit: att.commit,
+        verdict: att.verdict,
+        report: att.reportHash,
+        attester: att.attester,
+        at: 1,
+        retractedBy: null,
+      }),
+    );
+    useFakes({ chain: fakeChain({ latestAttestation }) });
+    renderRoute(
+      '/repos/dome-security/demo-repo',
+      http.get(PATH, () => HttpResponse.json(repoSummary({ attestation: att }))),
+    );
+    expect(await screen.findByText(/Verified: this attestation matches the Stellar testnet ledger/)).toBeInTheDocument();
+    expect(latestAttestation).toHaveBeenCalledWith(expect.objectContaining({ network: 'testnet' }), 'dome-security', 'demo-repo');
+  });
+
+  it('warns when the ledger shows a different verdict', async () => {
+    const att = await attestation();
+    useFakes({
+      chain: fakeChain({
+        latestAttestation: () =>
+          Promise.resolve({
+            commit: att.commit,
+            verdict: 'block',
+            report: att.reportHash,
+            attester: att.attester,
+            at: 1,
+            retractedBy: null,
+          }),
+      }),
+    });
+    renderRoute(
+      '/repos/dome-security/demo-repo',
+      http.get(PATH, () => HttpResponse.json(repoSummary({ attestation: att }))),
+    );
+    expect(await screen.findByRole('alert')).toHaveTextContent('The verdict differs from the ledger.');
   });
 });

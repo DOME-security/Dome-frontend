@@ -1,0 +1,25 @@
+.note {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-2);
+  padding: var(--space-2) var(--space-3);
+  margin: 0 0 var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.note ul,
+.note p {
+  margin: var(--space-1) 0 0;
+}
+
+.match {
+  border-color: var(--color-clean-border);
+  background: var(--color-clean-bg);
+  color: var(--color-clean-text);
+}
+
+.mismatch {
+  border: 2px solid var(--color-block-border);
+  background: var(--color-block-bg);
+  color: var(--color-block-text);
+}

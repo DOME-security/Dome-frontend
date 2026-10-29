@@ -1,13 +1,18 @@
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { useId, useMemo, useState } from 'react';
 import { Link } from 'react-router';
+import { LedgerCheck } from '../../components/LedgerCheck';
 import { ErrorMessage, Loading } from '../../components/Status';
 import { api, isSha256 } from '../../lib/api';
 import { config } from '../../lib/config';
 import { contractUrl, indicatorKindLabel, NETWORK_LABEL, shortKey } from '../../lib/registry';
+import { compareKnownBad } from '../../lib/stellar/spotcheck';
+import { useLedgerCheck } from '../../lib/stellar/useLedgerCheck';
 import ui from '../../styles/ui.module.css';
 
 export const PAGE_SIZE = 100;
+/** How many listed fingerprints are re-checked on the ledger with `is_known_bad`. */
+export const SPOT_CHECK_SIZE = 5;
 
 export function RegistryPage() {
   const [campaign, setCampaign] = useState('');
@@ -23,6 +28,16 @@ export function RegistryPage() {
   const campaigns = useMemo(() => [...new Set(indicators.map((i) => i.campaign))].sort(), [indicators]);
   const shown = campaign ? indicators.filter((i) => i.campaign === campaign) : indicators;
   const contract = contractUrl(config.registryContractId);
+  const sample = indicators
+    .filter((i) => i.kind === 'hash' && isSha256(i.value))
+    .slice(0, SPOT_CHECK_SIZE)
+    .map((i) => i.value);
+  const ledger = useLedgerCheck(
+    ['known-bad', ...sample],
+    (chain, net) => Promise.all(sample.map(async (hash) => ({ hash, knownBad: await chain.isKnownBad(net, hash) }))),
+    compareKnownBad,
+    sample.length > 0,
+  );
 
   return (
     <div className={ui.wide}>
@@ -48,6 +63,7 @@ export function RegistryPage() {
 
       {query.isSuccess && (
         <>
+          {sample.length > 0 && <LedgerCheck check={ledger.check} subject={`a sample of ${sample.length} listed fingerprints`} />}
           <div className={ui.row}>
             <div>
               <label htmlFor={campaignId} className={ui.label}>
@@ -114,7 +130,8 @@ export function RegistryPage() {
       )}
 
       <p className={ui.hint}>
-        Proposed and retracted indicators, approvals and on-chain verification of this list are planned; see the roadmap.
+        This list comes from the Dome API&apos;s index of the ledger. Open an indicator to see its approvals and full on-chain
+        record. Listing proposed and retracted indicators is planned.
       </p>
     </div>
   );

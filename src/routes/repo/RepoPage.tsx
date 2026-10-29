@@ -1,5 +1,6 @@
 import { useQuery } from '@tanstack/react-query';
 import { Link, useParams } from 'react-router';
+import { LedgerCheck } from '../../components/LedgerCheck';
 import { ReportView } from '../../components/ReportView';
 import { ErrorMessage, Loading } from '../../components/Status';
 import { api, ApiError } from '../../lib/api';
@@ -7,6 +8,8 @@ import { isValidOwner, isValidRepo } from '../../lib/github';
 import { accountUrl, shortKey, txUrl, verifyReportHash, type ReportCheck } from '../../lib/registry';
 import { VERDICT_TEXT } from '../../lib/rules';
 import type { OnChainAttestation, Scan, Verdict } from '../../lib/types';
+import { compareAttestation } from '../../lib/stellar/spotcheck';
+import { useLedgerCheck } from '../../lib/stellar/useLedgerCheck';
 import ui from '../../styles/ui.module.css';
 import { NotFoundPage } from '../not-found/NotFoundPage';
 
@@ -80,6 +83,12 @@ export function RepoPage() {
     queryFn: () => api.getRepo(owner, repo),
     enabled: valid,
   });
+  const ledger = useLedgerCheck(
+    ['attestation', owner.toLowerCase(), repo.toLowerCase()],
+    (chain, net) => chain.latestAttestation(net, owner, repo),
+    (chainValue) => compareAttestation(data?.attestation ?? null, chainValue),
+    valid && Boolean(data),
+  );
 
   if (!valid) return <NotFoundPage />;
 
@@ -106,6 +115,9 @@ export function RepoPage() {
         </div>
       )}
       {error && !notScanned && <ErrorMessage error={error} />}
+      {data && (data.attestation || ledger.check.state === 'mismatch') && (
+        <LedgerCheck check={ledger.check} subject="this attestation" />
+      )}
       {data && !notScanned && (
         <>
           {data.attestation ? (

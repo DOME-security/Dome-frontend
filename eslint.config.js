@@ -35,7 +35,8 @@ export const securityRules = {
 };
 
 export default tseslint.config(
-  { ignores: ['dist', 'coverage', 'playwright-report', 'test-results'] },
+  // src/vendor holds byte-identical copies of other repositories' files.
+  { ignores: ['dist', 'coverage', 'playwright-report', 'test-results', 'src/vendor'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
@@ -48,7 +49,11 @@ export default tseslint.config(
       ...react.configs['jsx-runtime'].rules,
       ...reactHooks.configs.recommended.rules,
       ...securityRules,
+      // Unused code and type-only imports are checked here rather than by tsc,
+      // so vendored files in src/vendor can stay identical to upstream.
       '@typescript-eslint/consistent-type-imports': 'error',
+      '@typescript-eslint/no-import-type-side-effects': 'error',
+      '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
     },
   },
   {

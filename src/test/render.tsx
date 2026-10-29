@@ -3,10 +3,12 @@ import { render, type RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import type { RequestHandler } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
+import { ServicesProvider } from '../lib/services';
 import { routes } from '../router';
 import { server } from './server';
+import { testServices } from './services';
 
-/** Renders the real route tree at `path`, with the Dome API answered by MSW `handlers`. */
+/** Renders the real route tree at `path`, with the Dome API answered by MSW `handlers` and fake chain and wallet (see ./services). */
 export function renderRoute(
   path: string,
   ...handlers: RequestHandler[]
@@ -17,7 +19,9 @@ export function renderRoute(
   const user = userEvent.setup();
   const result = render(
     <QueryClientProvider client={queryClient}>
-      <RouterProvider router={router} />
+      <ServicesProvider services={testServices()}>
+        <RouterProvider router={router} />
+      </ServicesProvider>
     </QueryClientProvider>,
   );
   return { ...result, user, router };

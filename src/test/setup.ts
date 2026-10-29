@@ -2,6 +2,7 @@ import '@testing-library/jest-dom/vitest';
 import { cleanup } from '@testing-library/react';
 import { afterEach } from 'vitest';
 import './server';
+import './services';
 
 // jsdom replaces AbortController but not Node's Request, and Node's Request
 // rejects jsdom's AbortSignal. React Router builds a Request on every
