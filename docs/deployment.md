@@ -30,7 +30,7 @@ The build injects a `Content-Security-Policy` meta tag into `index.html` and wri
 - `Permissions-Policy` denying camera, microphone, geolocation and payment
 - `Cross-Origin-Opener-Policy: same-origin`
 
-On other hosts (S3 + CloudFront, nginx, GitHub Pages behind a proxy), copy these headers from `dist/_headers` into the host's configuration. Both policies come from `config/security-headers.ts`.
+On other hosts (S3 + CloudFront, nginx, Vercel, GitHub Pages behind a proxy), copy these headers from `dist/_headers` into the host's configuration. Both policies come from `config/security-headers.ts`, and `connect-src` lists only the app itself, the Dome API and the configured Stellar RPC endpoints. There are no third-party analytics or trackers to allow.
 
 ## Routing
 

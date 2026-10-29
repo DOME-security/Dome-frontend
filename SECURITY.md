@@ -17,7 +17,9 @@ Out of scope: the scanner, API and indexer (`dome-backend`) and the on-chain reg
 - No HTML rendering of external text. `dangerouslySetInnerHTML`, `innerHTML`, `insertAdjacentHTML`, `eval` and `javascript:` URLs are lint errors, and `config/eslint.test.ts` proves the rules fire.
 - Verdict wording comes from `src/lib/rules.ts` and error wording from `src/lib/api.ts`. The `reason` and `error` fields in API responses are never displayed.
 - `/check/file` hashes files with Web Crypto in the browser. Only the hash is sent.
-- Production builds carry a strict CSP (`config/security-headers.ts`): scripts and styles from the app's origin only, network access only to the app and the Dome API.
+- Production builds carry a strict CSP (`config/security-headers.ts`): scripts and styles from the app's origin only, network access only to the app, the Dome API and the configured Stellar RPC, and `frame-ancestors 'none'` via `_headers`. No analytics or trackers.
+- Registry data from the Dome API is spot-checked against the Stellar ledger, and disagreements are shown to the user.
+- Curator transactions are built one per click, simulated, and summarised (action, indicator hash, network, signer, fee) before Freighter is asked to sign. The app never asks for or handles secret keys. Testnet is the default; mainnet needs an explicit switch and acknowledgement.
 - No install scripts (`.npmrc` sets `ignore-scripts=true`; pnpm blocks dependency builds), exact dependency versions, a 7-day minimum release age, and SHA-pinned GitHub Actions on `pull_request` with a read-only token. `scripts/check-hygiene.sh` enforces this in CI.
 
 ## Repository protections
