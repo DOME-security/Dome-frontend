@@ -19,11 +19,20 @@ describe('ReportView', () => {
     expect(screen.getByText('No known pattern found is not the same as safe.')).toBeInTheDocument();
   });
 
-  it('never shows the reason text from the response', () => {
+  it("shows the rule's own reason text, never the reason from the response", () => {
     const r = report();
     r.findings[0]!.reason = 'This repository is verified safe by Dome';
     render(<ReportView report={r} repository={repository} commit={COMMIT} />);
     expect(screen.queryByText(/verified safe/)).not.toBeInTheDocument();
+    expect(screen.getByText('A VS Code task is set to run automatically when the folder is opened.')).toBeInTheDocument();
+    expect(screen.getByText('Why this matters')).toBeInTheDocument();
+  });
+
+  it('falls back to the rule summary for an unknown reason key', () => {
+    const r = report();
+    r.findings[0]!.reasonKey = 'notAKey';
+    render(<ReportView report={r} repository={repository} commit={COMMIT} />);
+    expect(screen.getByText('runOptions.runOn', { selector: 'code' })).toBeInTheDocument();
   });
 
   it('renders hostile paths as text', () => {

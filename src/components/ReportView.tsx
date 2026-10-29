@@ -1,8 +1,10 @@
 import { fileUrl } from '../lib/github';
-import { describeRule, HONESTY_NOTICE, INCOMPLETE_TEXT, SEVERITY_ORDER } from '../lib/rules';
+import { parseInline, safeHref } from '../lib/markdown';
+import { describeRule, HONESTY_NOTICE, INCOMPLETE_TEXT, reasonText, SEVERITY_ORDER } from '../lib/rules';
 import type { Finding, Repository, ScanReport } from '../lib/types';
 import ui from '../styles/ui.module.css';
 import { FindingBadge } from './FindingBadge';
+import { InlineNodes } from './SafeMarkdown';
 import styles from './ReportView.module.css';
 import { VerdictBanner } from './VerdictBanner';
 
@@ -77,7 +79,29 @@ export function ReportView({ report, repository, commit }: Props) {
                     </td>
                     <td>
                       <strong>{rule.title}</strong>
-                      <p className={styles.summary}>{rule.summary}</p>
+                      <p className={styles.summary}>
+                        {reasonText(rule, finding.reasonKey) ?? <InlineNodes nodes={parseInline(rule.summary)} />}
+                      </p>
+                      {rule.why && (
+                        <details className={styles.why}>
+                          <summary>Why this matters</summary>
+                          <p>{rule.why}</p>
+                          {rule.references.length > 0 && (
+                            <ul>
+                              {rule.references.map((ref) => {
+                                const href = safeHref(ref.url);
+                                return href ? (
+                                  <li key={href}>
+                                    <a href={href} target="_blank" rel="noreferrer">
+                                      {ref.title}
+                                    </a>
+                                  </li>
+                                ) : null;
+                              })}
+                            </ul>
+                          )}
+                        </details>
+                      )}
                       {rule.known ? (
                         <a href={`${RULE_DOCS}/${rule.id}.md`} target="_blank" rel="noreferrer" className={styles.ruleId}>
                           {rule.id}

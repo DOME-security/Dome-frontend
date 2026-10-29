@@ -3,7 +3,7 @@ import { Link } from 'react-router';
 import type { Block, Inline } from '../lib/markdown';
 import styles from './SafeMarkdown.module.css';
 
-function InlineNodes({ nodes }: { nodes: Inline[] }) {
+export function InlineNodes({ nodes }: { nodes: Inline[] }) {
   return (
     <>
       {nodes.map((node, i) => {

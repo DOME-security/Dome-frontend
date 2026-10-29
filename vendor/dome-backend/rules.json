@@ -1,0 +1,570 @@
+{
+  "source": {
+    "repository": "https://github.com/DOME-security/Dome-backend",
+    "commit": "7cc41e8d7d925d153c0d7ef050ebcb6adc560a37",
+    "path": "packages/engine/src/rules"
+  },
+  "rules": [
+    {
+      "id": "DOME-AGT-001",
+      "title": "AI agent hooks or auto-approved tools",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "AI agent hooks and auto-approved tools: `.claude/settings*.json`, `.cursor/hooks.json`, `.mcp.json`, `.cursor/mcp.json`, `.vscode/mcp.json`.",
+      "reasons": {
+        "hooks": "Project settings define hooks that an AI coding agent runs automatically.",
+        "autoApprove": "Project settings let an AI coding agent run any shell command without asking.",
+        "mcpAutoEnable": "Project settings enable every MCP server in the repository without asking.",
+        "mcpServer": "A project MCP configuration starts a local command when an AI agent loads the repository."
+      },
+      "why": "AI coding agents read project-level configuration. Hooks and MCP servers are commands that run when the agent starts or uses a tool, and broad auto-approval lets injected instructions run shell commands unchecked.",
+      "references": [
+        {
+          "title": "VS Code Workspace Trust",
+          "url": "https://code.visualstudio.com/docs/editing/workspaces/workspace-trust"
+        }
+      ]
+    },
+    {
+      "id": "DOME-AST-001",
+      "title": "Font file is not a font",
+      "category": "payload",
+      "severity": "review",
+      "summary": "A file with a font extension whose bytes are not a real font (checked by format header fields, not just magic bytes).",
+      "reasons": {
+        "notAFont": "A file named like a font does not have a valid font header."
+      },
+      "why": "PolinRider, GhostAction and the RMG-Py attacker stored their obfuscated JavaScript loader as `public/fonts/fa-solid-*.woff2`. Nobody reviews binary-looking assets in a diff, and the file is later run with `node`. Combined with any auto-run surface in the same change, this becomes a block.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        }
+      ]
+    },
+    {
+      "id": "DOME-AST-002",
+      "title": "Asset in an execution position",
+      "category": "payload",
+      "severity": "block",
+      "summary": "An image or font asset referenced from an execution position (npm script, dev container hook, workflow step, shell script, `fork`, or read and evaluated).",
+      "reasons": {
+        "command": "A script or hook runs an image, font or other non-script file with Node.",
+        "fork": "Code starts a new Node process from an image or font file.",
+        "evaluated": "Code reads an image or font file and builds code from it at runtime."
+      },
+      "why": "Assets are never code. When something hands an asset to Node, or reads one and passes it to `eval`, `new Function` or `vm`, the asset is a disguised payload. VS Code tasks are covered by DOME-VSC-004.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        }
+      ]
+    },
+    {
+      "id": "DOME-CFG-001",
+      "title": "Code after the module body in a config file",
+      "category": "payload",
+      "severity": "review",
+      "summary": "Code after the module body in JS/TS config files, especially after a long run of whitespace.",
+      "reasons": {
+        "tail": "A config file has code after its export statement.",
+        "paddedTail": "A config file has code after its export statement, pushed out of view by a long run of whitespace."
+      },
+      "why": "PolinRider and the Next.js campaign appended an obfuscated loader to `postcss.config.mjs`, `tailwind.config.js` and `next.config.*`, after `export default` and hundreds of spaces so it sits off-screen in editors and diffs. The build tool then runs it on every `npm run dev`.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        }
+      ]
+    },
+    {
+      "id": "DOME-CFG-002",
+      "title": "Whitespace padding or very long line in source",
+      "category": "payload",
+      "severity": "review",
+      "summary": "Very long lines or heavy whitespace padding in source and config files.",
+      "reasons": {
+        "padding": "A source line has code pushed far to the right by a long run of whitespace.",
+        "longLine": "A source file that is otherwise readable has a single extremely long line."
+      },
+      "why": "Payloads appended to ordinary source files hide past the right edge of the editor or review pane. Minified bundles are expected to have long lines and are skipped by name.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-CFG-003",
+      "title": "Runtime code construction in config or route code",
+      "category": "payload",
+      "severity": "review",
+      "summary": "Runtime code construction (`eval`, `new Function`, `vm.runIn*`, detached hidden `child_process` spawns) in config or route files.",
+      "reasons": {
+        "eval": "A config or route file calls eval.",
+        "function": "A config or route file builds a function from a string with Function.",
+        "vm": "A config or route file compiles and runs code with the vm module.",
+        "hiddenSpawn": "A config or route file starts a detached, hidden background process."
+      },
+      "why": "Config files and server routes run with full privileges whenever the project builds or starts. Loaders decode a payload and run it with `eval` or `new Function`, or start a detached hidden process that outlives the dev server.",
+      "references": [
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        },
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-DEV-001",
+      "title": "Dev container lifecycle command",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "`.devcontainer/devcontainer.json` `initializeCommand`, `onCreateCommand`, `postCreateCommand`, `postStartCommand` or `postAttachCommand` added or changed.",
+      "reasons": {
+        "hostCommand": "The initializeCommand hook runs on the host machine, outside the container, before the container starts.",
+        "lifecycle": "A dev container command runs automatically when the container is created, started or attached.",
+        "payload": "A dev container command downloads and runs code, or runs a file that is not a script with Node."
+      },
+      "why": "Dev container hooks run without a prompt when someone opens the repository in a container or a Codespace. `initializeCommand` is the most sensitive: it runs on the host, with access to the developer's keys and wallets.",
+      "references": [
+        {
+          "title": "Dev Container metadata reference",
+          "url": "https://containers.dev/implementors/json_reference/"
+        },
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        }
+      ]
+    },
+    {
+      "id": "DOME-ENV-001",
+      "title": "Encoded URL in .env with code that sends the environment",
+      "category": "payload",
+      "severity": "review",
+      "summary": "Base64-encoded URLs in `.env` files combined with code that sends `process.env` over the network.",
+      "reasons": {
+        "encodedUrl": "An environment file stores a URL encoded as base64.",
+        "envSent": "Code sends the whole process environment over the network."
+      },
+      "why": "The malicious Next.js repositories Microsoft describes keep their C2 address base64-encoded in `.env` and add a backend route that posts the entire `process.env` (API keys, wallet keys, tokens) to it. Each half alone is a review; together they block.",
+      "references": [
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        }
+      ]
+    },
+    {
+      "id": "DOME-GHA-001",
+      "title": "Workflow added, changed or risky",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "New or changed workflow under `.github/workflows/`, weighted up for `pull_request_target`, secrets passed to `curl`/`wget`, or posting to raw IPs.",
+      "reasons": {
+        "changed": "A GitHub Actions workflow was added or changed.",
+        "pullRequestTarget": "The workflow runs on pull_request_target, with write access and secrets, for pull requests from forks.",
+        "checksOutPrHead": "The workflow runs on pull_request_target and checks out the pull request's own code.",
+        "secretsToNetwork": "A workflow step sends repository secrets to a network tool.",
+        "rawIp": "A workflow step contacts a raw IP address."
+      },
+      "why": "GhostAction added workflows that read every repository secret and posted them to an attacker server. `pull_request_target` combined with a checkout of the pull request runs untrusted code with write access.",
+      "references": [
+        {
+          "title": "Socket: GhostAction workflow injection",
+          "url": "https://socket.dev/blog/ghostaction-cloud-credentials"
+        },
+        {
+          "title": "GitHub Actions security hardening",
+          "url": "https://docs.github.com/actions/security-guides/security-hardening-for-github-actions"
+        }
+      ]
+    },
+    {
+      "id": "DOME-GIT-001",
+      "title": ".gitignore stops ignoring .vscode or .env",
+      "category": "autorun",
+      "severity": "info",
+      "summary": "`.gitignore` change that stops ignoring `.vscode` or `.env`.",
+      "reasons": {
+        "unignored": ".gitignore explicitly re-includes .vscode or .env files.",
+        "removed": ".gitignore no longer ignores .vscode or .env."
+      },
+      "why": "In the RMG-Py incident and RitualPlay analysis, the attacker edited `.gitignore` so the malicious `.vscode` folder would be committed and pushed to other contributors.",
+      "references": [
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        }
+      ]
+    },
+    {
+      "id": "DOME-GIT-002",
+      "title": "Git hooks committed to the repository",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "Git hooks committed to the repo (`.husky/`, `.githooks/`, `simple-git-hooks`) or a `core.hooksPath` setting.",
+      "reasons": {
+        "committedHook": "A git hook is committed to the repository and runs on commits, checkouts or pushes once installed.",
+        "hooksPath": "A script or config points git at hooks inside the repository with core.hooksPath."
+      },
+      "why": "Hooks committed to the repository are installed by `npm install` (husky, simple-git-hooks) or by `core.hooksPath`, then run on every commit, checkout or push. A changed hook is an easy place to hide a payload.",
+      "references": [
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        }
+      ]
+    },
+    {
+      "id": "DOME-IOC-001",
+      "title": "Known-bad file hash",
+      "category": "intel",
+      "severity": "block",
+      "summary": "File hashes on the known-bad list (synced from the Dome Registry and public advisories).",
+      "reasons": {
+        "knownHash": "This file is byte-for-byte identical to a known malicious file."
+      },
+      "why": "Campaigns reuse the same loader files across many repositories. An exact hash match needs no interpretation, so it always blocks and cannot be lowered by `.dome.yml`.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-IOC-002",
+      "title": "Published campaign marker",
+      "category": "intel",
+      "severity": "block",
+      "summary": "Published campaign markers (for example the signatures in OpenSourceMalware's PolinRider YARA rule).",
+      "reasons": {
+        "marker": "This file contains a byte sequence published as a marker of a known malware campaign."
+      },
+      "why": "Obfuscated loaders change their hash on every copy but keep distinctive strings. Markers come from public research and live in `packages/intel` data files, never in rule code.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-IOC-003",
+      "title": "Known malicious npm package",
+      "category": "intel",
+      "severity": "block",
+      "summary": "Dependencies on known malicious npm packages.",
+      "reasons": {
+        "dependency": "package.json depends on a package published as part of a known malware campaign.",
+        "lockfile": "The lockfile resolves a package published as part of a known malware campaign."
+      },
+      "why": "PolinRider published look-alike packages such as `tailwindcss-style-animate` whose install scripts ran the loader. A dependency on one runs it on the next `npm install`, even if it was added deep in the lockfile.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-IOC-004",
+      "title": "Known staging or C2 domain in an executable position",
+      "category": "intel",
+      "severity": "block",
+      "summary": "Known staging and C2 domains in executable positions (tasks, scripts, hooks, workflows, config and route code).",
+      "reasons": {
+        "domain": "Code that runs automatically contacts a domain known to host malware or command-and-control servers."
+      },
+      "why": "Loaders fetch their second stage from a small set of staging hosts. A known host in a task, script, hook or config file means the repository reaches out to attacker infrastructure.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        }
+      ]
+    },
+    {
+      "id": "DOME-NPM-001",
+      "title": "Install script added or changed",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "`preinstall`, `install`, `postinstall` or `prepare` scripts added or changed (and `binding.gyp`, which npm builds on install).",
+      "reasons": {
+        "installScript": "A package.json script that npm runs automatically on install was added or changed.",
+        "nodeGyp": "A binding.gyp file makes npm run a native build on install."
+      },
+      "why": "Install scripts run with the developer's privileges the moment someone types `npm install`. PolinRider shipped through packages such as `tailwindcss-style-animate` whose install hooks ran the loader.",
+      "references": [
+        {
+          "title": "npm scripts and lifecycle events",
+          "url": "https://docs.npmjs.com/cli/v10/using-npm/scripts"
+        },
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-NPM-002",
+      "title": "Install script runs an unexpected file",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "An install script runs a file that is not tracked source or a known build output.",
+      "reasons": {
+        "nonScript": "An install script runs a file that is not a script (such as a font or image).",
+        "missing": "An install script runs a file that is not in the repository and is not a known build output."
+      },
+      "why": "An honest install hook runs code you can read in the repository (`node scripts/setup.js`) or a build output (`node dist/install.js`). A hook that runs an asset, or a file that only appears after something else downloads it, hides what it does.",
+      "references": [
+        {
+          "title": "npm scripts and lifecycle events",
+          "url": "https://docs.npmjs.com/cli/v10/using-npm/scripts"
+        },
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    },
+    {
+      "id": "DOME-PRP-001",
+      "title": "Propagation script rewrites history",
+      "category": "payload",
+      "severity": "review",
+      "summary": "Propagation scripts that rewind the clock, amend the last commit and force-push.",
+      "reasons": {
+        "amendForcePush": "A script amends the last commit and force-pushes it.",
+        "rewritesHistory": "A script rewinds the clock, amends the last commit and force-pushes, hiding a change inside existing history."
+      },
+      "why": "PolinRider spread with `temp_auto_push.bat`: it set the system clock back, amended the latest commit to include the payload and force-pushed, so the change appears in an old, already-reviewed commit.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        }
+      ]
+    },
+    {
+      "id": "DOME-STL-001",
+      "title": "Code reads Stellar CLI identities",
+      "category": "stellar",
+      "severity": "review",
+      "summary": "Code that reads Stellar CLI identities (`~/.config/stellar/identity/*.toml`, plaintext unless created with `--secure-store`).",
+      "reasons": {
+        "reads": "Project code refers to the Stellar CLI identity folder, where secret keys are stored.",
+        "exfiltrates": "Project code refers to the Stellar CLI identity folder and also makes network requests."
+      },
+      "why": "Stellar CLI identities are stored as plaintext TOML files containing secret keys unless created with `--secure-store`. A project file has no reason to read them, and code that reads them and talks to the network can drain accounts.",
+      "references": [
+        {
+          "title": "Stellar CLI key storage",
+          "url": "https://developers.stellar.org/docs/tools/cli/agent-cli/reference/architecture"
+        }
+      ]
+    },
+    {
+      "id": "DOME-STL-002",
+      "title": "Code reads browser wallet extension storage",
+      "category": "stellar",
+      "severity": "review",
+      "summary": "Code that reads browser wallet extension storage (Freighter and others) from a project file.",
+      "reasons": {
+        "reads": "Project code refers to browser extension storage, where wallet extensions keep their vaults.",
+        "exfiltrates": "Project code refers to browser extension storage and also makes network requests."
+      },
+      "why": "Developer-targeting malware collects browser extension storage to steal wallet vaults, including Stellar wallets such as Freighter. Application code never needs to read another extension's storage from disk.",
+      "references": [
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        },
+        {
+          "title": "Abstract Security: Tracking the VS Code tasks infection vector",
+          "url": "https://www.abstract.security/blog/contagious-interview-tracking-the-vs-code-tasks-infection-vector"
+        }
+      ]
+    },
+    {
+      "id": "DOME-STL-003",
+      "title": "Hard-coded Stellar secret key",
+      "category": "stellar",
+      "severity": "review",
+      "summary": "Hard-coded Stellar secret keys (`S…` strkeys with a valid checksum) committed to the repo.",
+      "reasons": {
+        "secretKey": "A Stellar secret key is committed to the repository."
+      },
+      "why": "Anyone who can read the repository can sign for the account. Only candidates with a valid SEP-23 checksum are reported, so random 56-character strings do not match.",
+      "references": [
+        {
+          "title": "SEP-23: Strkey encoding",
+          "url": "https://github.com/stellar/stellar-protocol/blob/master/ecosystem/sep-0023.md"
+        }
+      ]
+    },
+    {
+      "id": "DOME-VSC-001",
+      "title": "Task runs on folder open",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "A `.vscode/tasks.json` or `*.code-workspace` task sets `runOptions.runOn` to `folderOpen`.",
+      "reasons": {
+        "folderOpen": "A VS Code task is set to run automatically when the folder is opened."
+      },
+      "why": "A folder-open task runs as soon as someone opens the repository in VS Code or Cursor and trusts the workspace. It was the entry point in PolinRider/TasksJacker, Contagious Interview and the RMG-Py incident, where the task launched a script disguised as a font.",
+      "references": [
+        {
+          "title": "Abstract Security: Tracking the VS Code tasks infection vector",
+          "url": "https://www.abstract.security/blog/contagious-interview-tracking-the-vs-code-tasks-infection-vector"
+        },
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        },
+        {
+          "title": "VS Code Workspace Trust",
+          "url": "https://code.visualstudio.com/docs/editing/workspaces/workspace-trust"
+        }
+      ]
+    },
+    {
+      "id": "DOME-VSC-002",
+      "title": "Automatic tasks turned on",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "Workspace settings set `task.allowAutomaticTasks` to `on`.",
+      "reasons": {
+        "allowAutomaticTasks": "Turns on automatic tasks so VS Code does not ask first."
+      },
+      "why": "VS Code asks before running a folder-open task for the first time. Setting `task.allowAutomaticTasks` to `on` in the workspace removes that prompt, which is what the RMG-Py attacker did alongside the malicious task.",
+      "references": [
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        },
+        {
+          "title": "VS Code Workspace Trust",
+          "url": "https://code.visualstudio.com/docs/editing/workspaces/workspace-trust"
+        }
+      ]
+    },
+    {
+      "id": "DOME-VSC-003",
+      "title": ".vscode hidden from view",
+      "category": "autorun",
+      "severity": "review",
+      "summary": "`files.exclude` or `search.exclude` hides `.vscode` or `tasks.json`.",
+      "reasons": {
+        "hidden": "Workspace settings hide the .vscode folder or tasks.json from the file explorer or search."
+      },
+      "why": "Hiding `.vscode` keeps a malicious task out of sight in the editor. The RMG-Py attacker added `files.exclude` entries for exactly this.",
+      "references": [
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        }
+      ]
+    },
+    {
+      "id": "DOME-VSC-004",
+      "title": "Task runs a non-script file with Node",
+      "category": "autorun",
+      "severity": "block",
+      "summary": "A task command runs a font, image or other non-script file with `node` (string or array form, `sh -c`, `-r`/`--import`, stdin).",
+      "reasons": {
+        "nonScript": "A VS Code task runs a file that is not a script (such as a font or image) with Node.",
+        "nonScriptViaNpm": "A VS Code task runs an npm script that runs a file that is not a script with Node."
+      },
+      "why": "Legitimate tasks run JavaScript files. Running `node` on a `.woff2`, `.png` or similar is how PolinRider, GhostAction and the RMG-Py attacker hid their loader: the \"font\" is really obfuscated JavaScript.",
+      "references": [
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        },
+        {
+          "title": "RMG-Py incident report and hardening advice",
+          "url": "https://github.com/ReactionMechanismGenerator/RMG-Py/issues/3008"
+        },
+        {
+          "title": "Abstract Security: Tracking the VS Code tasks infection vector",
+          "url": "https://www.abstract.security/blog/contagious-interview-tracking-the-vs-code-tasks-infection-vector"
+        }
+      ]
+    },
+    {
+      "id": "DOME-VSC-005",
+      "title": "Task downloads and runs code",
+      "category": "autorun",
+      "severity": "block",
+      "summary": "A task command downloads and pipes to a shell (`curl … | sh`, `wget … | bash`, PowerShell `iwr | iex`).",
+      "reasons": {
+        "downloadAndRun": "A VS Code task downloads something from the network and runs it."
+      },
+      "why": "Contagious Interview and Microsoft's Next.js report describe tasks that fetch a second stage from a staging server and run it in a shell. Nothing about the downloaded code is visible in the repository.",
+      "references": [
+        {
+          "title": "Abstract Security: Tracking the VS Code tasks infection vector",
+          "url": "https://www.abstract.security/blog/contagious-interview-tracking-the-vs-code-tasks-infection-vector"
+        },
+        {
+          "title": "Microsoft: Developer-targeting campaign using malicious Next.js repositories",
+          "url": "https://www.microsoft.com/en-us/security/blog/2026/02/24/c2-developer-targeting-campaign/"
+        }
+      ]
+    },
+    {
+      "id": "DOME-VSC-006",
+      "title": "Task output hidden",
+      "category": "autorun",
+      "severity": "info",
+      "summary": "Task options hide output (`presentation.reveal: never`, `presentation.echo: false`, `hide: true`) on a task that also runs on folder open or runs a payload.",
+      "reasons": {
+        "hiddenOutput": "The task hides its terminal output, so nothing is visible while it runs."
+      },
+      "why": "Malicious folder-open tasks set `reveal: never` so no terminal panel appears. On its own this is harmless; it is reported as context next to other task findings.",
+      "references": [
+        {
+          "title": "Abstract Security: Tracking the VS Code tasks infection vector",
+          "url": "https://www.abstract.security/blog/contagious-interview-tracking-the-vs-code-tasks-infection-vector"
+        },
+        {
+          "title": "OpenSourceMalware: PolinRider dossier and YARA rule",
+          "url": "https://github.com/OpenSourceMalware/PolinRider"
+        }
+      ]
+    }
+  ]
+}
