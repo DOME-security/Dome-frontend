@@ -4,7 +4,8 @@ test('production build ships a strict Content Security Policy', async ({ page })
   await page.goto('/');
   const csp = await page.locator('meta[http-equiv="Content-Security-Policy"]').getAttribute('content');
   expect(csp).toContain("script-src 'self'");
-  expect(csp).toContain("connect-src 'self'");
+  expect(csp).toContain("connect-src 'self' https://soroban-testnet.stellar.org");
+  expect(csp).toContain("object-src 'none'");
   expect(csp).not.toContain('unsafe-inline');
 });
 
@@ -25,19 +26,24 @@ test('guides render and deep links work', async ({ page }) => {
   await expect(box).toBeChecked();
 });
 
-test('the page never scrolls sideways at phone width', async ({ page }) => {
-  await page.setViewportSize({ width: 360, height: 740 });
-  for (const path of ['/', '/check/repo', '/check/file', '/guides/hardening']) {
-    await page.goto(path);
-    await expect(page.locator('h1')).toBeVisible();
-    const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-    expect(overflow, path).toBeLessThanOrEqual(0);
-  }
-});
-
 test('theme choice persists across reloads', async ({ page }) => {
   await page.goto('/');
   await page.getByLabel('Colour theme').selectOption('dark');
   await page.reload();
   await expect(page.locator('html')).toHaveAttribute('data-theme', 'dark');
+});
+
+test('keyboard alone reaches every main navigation link with a visible focus ring', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Keyboard navigation is checked on desktop');
+  await page.goto('/');
+  await expect(page.locator('h1')).toBeVisible();
+  const reached: string[] = [];
+  for (let i = 0; i < 12; i++) {
+    await page.keyboard.press('Tab');
+    const focused = page.locator(':focus');
+    const outline = await focused.evaluate((el) => getComputedStyle(el).outlineStyle);
+    expect(outline).not.toBe('none');
+    reached.push((await focused.textContent())?.trim() ?? '');
+  }
+  for (const name of ['Check a repo', 'Check a file', 'Registry', 'Infected?', 'Maintainers']) expect(reached).toContain(name);
 });

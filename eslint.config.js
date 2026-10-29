@@ -36,7 +36,7 @@ export const securityRules = {
 
 export default tseslint.config(
   // src/vendor holds byte-identical copies of other repositories' files.
-  { ignores: ['dist', 'coverage', 'playwright-report', 'test-results', 'src/vendor'] },
+  { ignores: ['dist', 'dist-e2e', 'coverage', 'playwright-report', 'test-results', 'src/vendor'] },
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
