@@ -69,6 +69,11 @@ export function contractErrorMessage(code: number): string {
 }
 
 export const INDICATOR_KIND_TEXT: Record<string, string> = {
+  // Kinds in the backend index.
+  hash: 'File fingerprint',
+  marker: 'Campaign marker',
+  domain: 'Staging or C2 domain',
+  // Kinds in the contract.
   task: 'Editor task file',
   font: 'Fake font file',
   config: 'Build config file',

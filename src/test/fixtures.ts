@@ -41,7 +41,7 @@ export function scan(overrides: Partial<Scan> = {}): Scan {
     startedAt: '2026-10-28T10:00:01Z',
     finishedAt: '2026-10-28T10:00:05Z',
     report: report(),
-    reportHash: null,
+    reportHash: undefined,
     attestation: null,
     ...overrides,
   };
@@ -58,8 +58,8 @@ export function repoSummary(overrides: Partial<RepoSummary> = {}): RepoSummary {
 
 export const indicatorPage: IndicatorPage = {
   indicators: [
-    { kind: 'task', value: DEMO_HASH, campaign: 'demo', evidence: ['https://example.org/advisory'] },
-    { kind: 'font', value: 'b'.repeat(64), campaign: 'demo', evidence: [] },
+    { kind: 'hash', value: DEMO_HASH, campaign: 'demo', evidence: ['https://example.org/advisory'] },
+    { kind: 'hash', value: 'b'.repeat(64), campaign: 'demo', evidence: [] },
     { kind: 'package', value: 'dome-fixture-package', campaign: 'other-demo', evidence: [] },
   ],
   nextCursor: null,

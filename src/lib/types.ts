@@ -1,105 +1,24 @@
-// Response shapes from dome-backend. Source of truth: dome-backend docs/api.md
-// and packages/engine/src/types.ts. A change there is a breaking change here.
+import type { components } from './api-schema';
 
-export type Severity = 'info' | 'review' | 'block';
-export type Verdict = 'clean' | 'review' | 'block' | 'incomplete';
-export type ScanStatus = 'queued' | 'running' | 'done' | 'failed';
+// Response shapes from dome-backend, generated from the vendored OpenAPI
+// document (vendor/dome-backend/openapi.json → src/lib/api-schema.ts via
+// `pnpm generate:api`). Edit the OpenAPI file, never the generated one.
 
-export interface Location {
-  path: string;
-  line?: number;
-  column?: number;
-}
+type Schemas = components['schemas'];
 
-export interface Finding {
-  ruleId: string;
-  relatedRules: string[];
-  severity: Severity;
-  reasonKey: string;
-  reason: string;
-  locations: Location[];
-  fixture?: boolean;
-  allowed?: boolean;
-}
-
-export interface IncompleteRead {
-  path: string;
-  reason: 'too-large' | 'read-error' | 'invalid-config' | 'unsupported-entry';
-}
-
-export interface ScanReport {
-  tool: { name: 'dome'; version: string };
-  target: string;
-  scope: 'full' | 'diff';
-  verdict: Verdict;
-  findings: Finding[];
-  incomplete: IncompleteRead[];
-  stats: { filesInTree: number; filesInScope: number; rulesRun: number };
-}
-
-export interface Repository {
-  owner: string;
-  repo: string;
-  url?: string;
-}
-
-export interface Scan {
-  id: string;
-  repository: Repository;
-  ref: string | null;
-  commit: string | null;
-  pullRequest: number | null;
-  status: ScanStatus;
-  verdict: Verdict | null;
-  createdAt: string;
-  startedAt: string | null;
-  finishedAt: string | null;
-  report: ScanReport | null;
-  reportHash: string | null;
-  attestation: { tx: string } | null;
-}
-
-export interface CreatedScan {
-  id: string;
-  status: ScanStatus;
-  links: { self: string };
-}
-
-export interface OnChainAttestation {
-  commit: string;
-  verdict: string;
-  reportHash: string;
-  attester: string;
-  ledger: number;
-  txHash: string;
-  closedAt: string;
-}
-
-export interface RepoSummary {
-  repository: Repository;
-  latestScan: Scan | null;
-  attestation: OnChainAttestation | null;
-}
-
-export type IndicatorLookup =
-  | { sha256: string; known: false }
-  | {
-      sha256: string;
-      known: true;
-      campaign: string;
-      evidence: string[];
-      ledger: number;
-      txHash: string;
-    };
-
-export interface IndicatorEntry {
-  kind: string;
-  value: string;
-  campaign: string;
-  evidence: string[];
-}
-
-export interface IndicatorPage {
-  indicators: IndicatorEntry[];
-  nextCursor: string | null;
-}
+export type Severity = Schemas['Severity'];
+export type Verdict = Schemas['Verdict'];
+export type ScanStatus = Schemas['ScanStatus'];
+export type Location = Schemas['Location'];
+export type Finding = Schemas['Finding'];
+export type IncompleteRead = Schemas['IncompleteRead'];
+export type ScanReport = Schemas['ScanReport'];
+export type Repository = Schemas['Repository'];
+export type Scan = Schemas['Scan'];
+export type CreatedScan = Schemas['CreatedScan'];
+export type OnChainAttestation = Schemas['OnChainAttestation'];
+export type RepoSummary = Schemas['RepoSummary'];
+export type IndicatorLookup = Schemas['IndicatorLookup'];
+export type IndicatorEntry = Schemas['IndicatorEntry'];
+export type IndicatorPage = Schemas['IndicatorPage'];
+export type ScanRequest = Schemas['ScanRequest'];

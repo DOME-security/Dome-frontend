@@ -38,6 +38,8 @@ jobs:
           node-version: ${{ matrix.node }}
           cache: pnpm
       - run: pnpm install --frozen-lockfile --ignore-scripts
+      - name: Generated API types match the vendored OpenAPI document
+        run: pnpm generate:api && git diff --exit-code src/lib/api-schema.ts
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

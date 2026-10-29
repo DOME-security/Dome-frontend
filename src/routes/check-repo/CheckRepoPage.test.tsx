@@ -33,7 +33,7 @@ describe('/check/repo', () => {
       'POST /v1/scans': () => ({ status: 202, body: { id: 'scan-1', status: 'queued', links: { self: '/v1/scans/scan-1' } } }),
       'GET /v1/scans/scan-1': () => {
         polls += 1;
-        return { body: polls === 1 ? scan({ status: 'running', verdict: null, report: null }) : scan() };
+        return { body: polls === 1 ? scan({ status: 'running', verdict: null, report: undefined }) : scan() };
       },
     });
     await user.type(await screen.findByLabelText('GitHub repository'), 'https://github.com/dome-security/demo-repo/tree/main');
@@ -52,7 +52,7 @@ describe('/check/repo', () => {
 
   it('opens an existing scan from the URL and says a failed scan is not clean', async () => {
     renderRoute('/check/repo?scan=scan-9', {
-      'GET /v1/scans/scan-9': () => ({ body: scan({ id: 'scan-9', status: 'failed', verdict: null, report: null }) }),
+      'GET /v1/scans/scan-9': () => ({ body: scan({ id: 'scan-9', status: 'failed', verdict: null, report: undefined }) }),
     });
     expect(await screen.findByRole('alert')).toHaveTextContent(/not a clean result/);
   });

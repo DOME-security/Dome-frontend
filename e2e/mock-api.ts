@@ -45,8 +45,7 @@ function scan(status: string) {
     createdAt: '2026-10-28T10:00:00Z',
     startedAt: null,
     finishedAt: null,
-    report: done ? report : null,
-    reportHash: null,
+    ...(done ? { report } : {}),
     attestation: null,
   };
 }
@@ -70,7 +69,7 @@ export async function mockApi(page: Page, options: { knownHash?: string } = {}):
     }
     if (pathname === '/v1/indicators') {
       return json({
-        indicators: [{ kind: 'task', value: 'a'.repeat(64), campaign: 'demo', evidence: ['https://example.org/advisory'] }],
+        indicators: [{ kind: 'hash', value: 'a'.repeat(64), campaign: 'demo', evidence: ['https://example.org/advisory'] }],
         nextCursor: null,
       });
     }

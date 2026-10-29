@@ -14,7 +14,7 @@ describe('/registry', () => {
     expect(within(table).getAllByRole('row')).toHaveLength(4);
     expect(within(table).getByTitle(DEMO_HASH)).toHaveAttribute('href', `/registry/indicator/${DEMO_HASH}`);
     expect(within(table).getByText('dome-fixture-package')).toBeInTheDocument();
-    expect(within(table).getByText('Fake font file')).toBeInTheDocument();
+    expect(within(table).getAllByText('File fingerprint')).toHaveLength(2);
 
     await user.selectOptions(screen.getByLabelText('Campaign'), 'other-demo');
     expect(within(screen.getByRole('table')).getAllByRole('row')).toHaveLength(2);
@@ -24,11 +24,14 @@ describe('/registry', () => {
     const { user } = renderRoute('/registry', {
       'GET /v1/indicators?limit=100': () => ({ body: { ...indicatorPage, nextCursor: 'next' } }),
       'GET /v1/indicators?limit=100&cursor=next': () => ({
-        body: { indicators: [{ kind: 'script', value: 'e'.repeat(64), campaign: 'demo', evidence: [] }], nextCursor: null },
+        body: {
+          indicators: [{ kind: 'domain', value: 'staging.example.invalid', campaign: 'demo', evidence: [] }],
+          nextCursor: null,
+        },
       }),
     });
     await user.click(await screen.findByRole('button', { name: 'Load more' }));
-    expect(await screen.findByText('Script')).toBeInTheDocument();
+    expect(await screen.findByText('Staging or C2 domain')).toBeInTheDocument();
     expect(screen.queryByRole('button', { name: 'Load more' })).not.toBeInTheDocument();
   });
 

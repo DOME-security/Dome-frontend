@@ -1,0 +1,249 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Dome API",
+    "version": "0.1.0",
+    "description": "REST API of dome-backend as consumed by dome-frontend. Written from docs/api.md and packages/server/src/routes at the commit below, because dome-backend does not publish an OpenAPI document yet. Replace with the upstream file when it does.",
+    "x-source": {
+      "repository": "https://github.com/DOME-security/Dome-backend",
+      "commit": "7cc41e8d7d925d153c0d7ef050ebcb6adc560a37",
+      "paths": ["docs/api.md", "packages/server/src/routes", "packages/engine/src/types.ts"]
+    }
+  },
+  "paths": {
+    "/v1/scans": {
+      "post": {
+        "operationId": "createScan",
+        "summary": "Queue a scan of a public GitHub repository",
+        "requestBody": {
+          "required": true,
+          "content": { "application/json": { "schema": { "$ref": "#/components/schemas/ScanRequest" } } }
+        },
+        "responses": {
+          "200": { "description": "The same repository and ref is already queued or running", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatedScan" } } } },
+          "202": { "description": "Scan queued", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/CreatedScan" } } } },
+          "400": { "$ref": "#/components/responses/Error" },
+          "429": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/scans/{id}": {
+      "get": {
+        "operationId": "getScan",
+        "parameters": [{ "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }],
+        "responses": {
+          "200": { "description": "The scan", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Scan" } } } },
+          "404": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/repos/{owner}/{repo}": {
+      "get": {
+        "operationId": "getRepo",
+        "summary": "Latest scan and latest on-chain attestation; both null for a repository Dome has not seen",
+        "parameters": [
+          { "name": "owner", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[A-Za-z0-9-]{1,39}$" } },
+          { "name": "repo", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,100}$" } }
+        ],
+        "responses": {
+          "200": { "description": "Repository summary", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/RepoSummary" } } } },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/indicators": {
+      "get": {
+        "operationId": "listIndicators",
+        "summary": "Active indicators approved on the Dome Registry, ordered by kind and value",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "minimum": 1, "maximum": 500, "default": 100 } },
+          { "name": "cursor", "in": "query", "schema": { "type": "string", "maxLength": 500 } }
+        ],
+        "responses": {
+          "200": { "description": "A page of indicators", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndicatorPage" } } } },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    },
+    "/v1/indicators/{sha256}": {
+      "get": {
+        "operationId": "getIndicator",
+        "parameters": [{ "name": "sha256", "in": "path", "required": true, "schema": { "type": "string", "pattern": "^[0-9a-fA-F]{64}$" } }],
+        "responses": {
+          "200": { "description": "Whether the hash is an active indicator", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/IndicatorLookup" } } } },
+          "400": { "$ref": "#/components/responses/Error" }
+        }
+      }
+    }
+  },
+  "components": {
+    "responses": {
+      "Error": { "description": "Error", "content": { "application/json": { "schema": { "$ref": "#/components/schemas/Error" } } } }
+    },
+    "schemas": {
+      "Error": { "type": "object", "required": ["error"], "properties": { "error": { "type": "string" } } },
+      "ScanRequest": {
+        "type": "object",
+        "required": ["url"],
+        "additionalProperties": false,
+        "properties": {
+          "url": { "type": "string", "maxLength": 300, "description": "https://github.com/<owner>/<repo>" },
+          "ref": { "type": "string", "maxLength": 200, "description": "Branch or tag; the default branch when omitted" }
+        }
+      },
+      "ScanStatus": { "type": "string", "enum": ["queued", "running", "done", "failed"] },
+      "Verdict": { "type": "string", "enum": ["clean", "review", "block", "incomplete"] },
+      "Severity": { "type": "string", "enum": ["info", "review", "block"] },
+      "CreatedScan": {
+        "type": "object",
+        "required": ["id", "status", "links"],
+        "properties": {
+          "id": { "type": "string" },
+          "status": { "$ref": "#/components/schemas/ScanStatus" },
+          "links": { "type": "object", "required": ["self"], "properties": { "self": { "type": "string" } } }
+        }
+      },
+      "Repository": {
+        "type": "object",
+        "required": ["owner", "repo"],
+        "properties": { "owner": { "type": "string" }, "repo": { "type": "string" }, "url": { "type": "string" } }
+      },
+      "Location": {
+        "type": "object",
+        "required": ["path"],
+        "properties": {
+          "path": { "type": "string", "description": "Repository-relative POSIX path. Repository-supplied: render as text." },
+          "line": { "type": "integer", "minimum": 1 },
+          "column": { "type": "integer", "minimum": 1 }
+        }
+      },
+      "Finding": {
+        "type": "object",
+        "required": ["ruleId", "relatedRules", "severity", "reasonKey", "reason", "locations"],
+        "properties": {
+          "ruleId": { "type": "string" },
+          "relatedRules": { "type": "array", "items": { "type": "string" } },
+          "severity": { "$ref": "#/components/schemas/Severity" },
+          "reasonKey": { "type": "string" },
+          "reason": { "type": "string", "description": "Engine wording. The frontend shows its vendored rule text for reasonKey instead." },
+          "locations": { "type": "array", "items": { "$ref": "#/components/schemas/Location" } },
+          "fixture": { "type": "boolean" },
+          "allowed": { "type": "boolean" }
+        }
+      },
+      "IncompleteRead": {
+        "type": "object",
+        "required": ["path", "reason"],
+        "properties": {
+          "path": { "type": "string" },
+          "reason": { "type": "string", "enum": ["too-large", "read-error", "invalid-config", "unsupported-entry"] }
+        }
+      },
+      "ScanReport": {
+        "type": "object",
+        "required": ["tool", "target", "scope", "verdict", "findings", "incomplete", "stats"],
+        "properties": {
+          "tool": { "type": "object", "required": ["name", "version"], "properties": { "name": { "const": "dome" }, "version": { "type": "string" } } },
+          "target": { "type": "string" },
+          "scope": { "type": "string", "enum": ["full", "diff"] },
+          "verdict": { "$ref": "#/components/schemas/Verdict" },
+          "findings": { "type": "array", "items": { "$ref": "#/components/schemas/Finding" } },
+          "incomplete": { "type": "array", "items": { "$ref": "#/components/schemas/IncompleteRead" } },
+          "stats": {
+            "type": "object",
+            "required": ["filesInTree", "filesInScope", "rulesRun"],
+            "properties": { "filesInTree": { "type": "integer" }, "filesInScope": { "type": "integer" }, "rulesRun": { "type": "integer" } }
+          }
+        }
+      },
+      "Scan": {
+        "type": "object",
+        "required": ["id", "repository", "ref", "commit", "pullRequest", "status", "verdict", "createdAt", "startedAt", "finishedAt", "attestation"],
+        "properties": {
+          "id": { "type": "string" },
+          "repository": { "$ref": "#/components/schemas/Repository" },
+          "ref": { "type": ["string", "null"] },
+          "commit": { "type": ["string", "null"] },
+          "pullRequest": { "type": ["integer", "null"] },
+          "status": { "$ref": "#/components/schemas/ScanStatus" },
+          "verdict": { "oneOf": [{ "$ref": "#/components/schemas/Verdict" }, { "type": "null" }] },
+          "createdAt": { "type": "string", "format": "date-time" },
+          "startedAt": { "type": ["string", "null"], "format": "date-time" },
+          "finishedAt": { "type": ["string", "null"], "format": "date-time" },
+          "error": { "type": "string", "description": "Present when status is failed. Not shown to users." },
+          "report": { "$ref": "#/components/schemas/ScanReport", "description": "Present once a report exists." },
+          "reportHash": { "type": "string", "description": "SHA-256 of the report as canonical JSON. Present with report." },
+          "attestation": {
+            "oneOf": [{ "type": "object", "required": ["tx"], "properties": { "tx": { "type": "string" } } }, { "type": "null" }]
+          }
+        }
+      },
+      "OnChainAttestation": {
+        "type": "object",
+        "required": ["commit", "verdict", "reportHash", "attester", "ledger", "txHash", "closedAt"],
+        "properties": {
+          "commit": { "type": "string" },
+          "verdict": { "type": "string" },
+          "reportHash": { "type": "string" },
+          "attester": { "type": "string" },
+          "ledger": { "type": "integer" },
+          "txHash": { "type": "string" },
+          "closedAt": { "type": "string", "format": "date-time" }
+        }
+      },
+      "RepoSummary": {
+        "type": "object",
+        "required": ["repository", "latestScan", "attestation"],
+        "properties": {
+          "repository": { "$ref": "#/components/schemas/Repository" },
+          "latestScan": { "oneOf": [{ "$ref": "#/components/schemas/Scan" }, { "type": "null" }] },
+          "attestation": { "oneOf": [{ "$ref": "#/components/schemas/OnChainAttestation" }, { "type": "null" }] }
+        }
+      },
+      "IndicatorKind": {
+        "type": "string",
+        "description": "Kinds used by the backend index (packages/registry-client). They differ from the contract's kinds (task, font, config, script, package).",
+        "enum": ["hash", "marker", "package", "domain"]
+      },
+      "IndicatorEntry": {
+        "type": "object",
+        "required": ["kind", "value", "campaign", "evidence"],
+        "properties": {
+          "kind": { "$ref": "#/components/schemas/IndicatorKind" },
+          "value": { "type": "string" },
+          "campaign": { "type": "string" },
+          "evidence": { "type": "array", "items": { "type": "string" } }
+        }
+      },
+      "IndicatorPage": {
+        "type": "object",
+        "required": ["indicators", "nextCursor"],
+        "properties": {
+          "indicators": { "type": "array", "items": { "$ref": "#/components/schemas/IndicatorEntry" } },
+          "nextCursor": { "type": ["string", "null"] }
+        }
+      },
+      "IndicatorLookup": {
+        "oneOf": [
+          {
+            "type": "object",
+            "required": ["sha256", "known"],
+            "properties": { "sha256": { "type": "string" }, "known": { "const": false } }
+          },
+          {
+            "type": "object",
+            "required": ["sha256", "known", "campaign", "evidence", "ledger", "txHash"],
+            "properties": {
+              "sha256": { "type": "string" },
+              "known": { "const": true },
+              "campaign": { "type": "string" },
+              "evidence": { "type": "array", "items": { "type": "string" } },
+              "ledger": { "type": "integer" },
+              "txHash": { "type": "string" }
+            }
+          }
+        ]
+      }
+    }
+  }
+}

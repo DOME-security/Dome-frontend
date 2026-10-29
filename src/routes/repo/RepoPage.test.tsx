@@ -45,7 +45,11 @@ describe('/repos/:owner/:repo', () => {
   });
 
   it('offers a scan for repositories Dome has not seen', async () => {
-    renderRoute('/repos/dome-security/demo-repo', { [PATH]: () => ({ status: 404, body: { error: 'not found' } }) });
+    renderRoute('/repos/dome-security/demo-repo', {
+      [PATH]: () => ({
+        body: { repository: { owner: 'dome-security', repo: 'demo-repo' }, latestScan: null, attestation: null },
+      }),
+    });
     expect(await screen.findByText('Dome has not scanned this repository yet.')).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Check it now' })).toHaveAttribute('href', '/check/repo');
   });

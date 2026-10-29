@@ -83,7 +83,8 @@ export function RepoPage() {
 
   if (!valid) return <NotFoundPage />;
 
-  const notScanned = error instanceof ApiError && error.status === 404;
+  // The API answers 200 with both fields null for a repository it has never seen.
+  const notScanned = (error instanceof ApiError && error.status === 404) || (data && !data.latestScan && !data.attestation);
   return (
     <div className={ui.wide}>
       <title>{`${owner}/${repo} · Dome`}</title>
@@ -105,7 +106,7 @@ export function RepoPage() {
         </div>
       )}
       {error && !notScanned && <ErrorMessage error={error} />}
-      {data && (
+      {data && !notScanned && (
         <>
           {data.attestation ? (
             <Attestation attestation={data.attestation} scan={data.latestScan} />
