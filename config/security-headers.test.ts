@@ -14,6 +14,17 @@ describe('contentSecurityPolicy', () => {
     expect(contentSecurityPolicy('https://api.dome.example/base/')).toContain("connect-src 'self' https://api.dome.example;");
   });
 
+  it('adds Stellar RPC origins once each', () => {
+    const csp = contentSecurityPolicy('https://api.dome.example', [
+      'https://soroban-testnet.stellar.org',
+      'https://soroban-testnet.stellar.org/',
+      'https://rpc.mainnet.example/path',
+    ]);
+    expect(csp).toContain(
+      "connect-src 'self' https://api.dome.example https://soroban-testnet.stellar.org https://rpc.mainnet.example;",
+    );
+  });
+
   it('rejects relative or non-http URLs', () => {
     expect(() => apiOrigin('/v1')).toThrow(/absolute/);
     expect(() => apiOrigin('javascript:alert(1)')).toThrow(/http/);
