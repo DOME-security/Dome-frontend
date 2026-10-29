@@ -14,15 +14,18 @@ export const routes: RouteObject[] = [
         // Errors inside a page keep the header and footer.
         errorElement: <RouteError />,
         children: [
-      { index: true, lazy: async () => ({ Component: (await import('./routes/home/HomePage')).HomePage }) },
-      {
-        path: 'guides/:slug',
-        lazy: async () => {
-          const [{ GuidePage }, { guideLoader }] = await Promise.all([import('./routes/guides/GuidePage'), import('./routes/guides/guides')]);
-          return { Component: GuidePage, loader: guideLoader };
-        },
-      },
-      { path: '*', lazy: async () => ({ Component: (await import('./routes/not-found/NotFoundPage')).NotFoundPage }) },
+          { index: true, lazy: async () => ({ Component: (await import('./routes/home/HomePage')).HomePage }) },
+          {
+            path: 'guides/:slug',
+            lazy: async () => {
+              const [{ GuidePage }, { guideLoader }] = await Promise.all([
+                import('./routes/guides/GuidePage'),
+                import('./routes/guides/guides'),
+              ]);
+              return { Component: GuidePage, loader: guideLoader };
+            },
+          },
+          { path: '*', lazy: async () => ({ Component: (await import('./routes/not-found/NotFoundPage')).NotFoundPage }) },
         ],
       },
     ],

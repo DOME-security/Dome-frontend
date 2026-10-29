@@ -14,11 +14,11 @@ export const securityRules = {
   'no-restricted-syntax': [
     'error',
     {
-      selector: "AssignmentExpression > MemberExpression[property.name=/^(innerHTML|outerHTML)$/]",
+      selector: 'AssignmentExpression > MemberExpression[property.name=/^(innerHTML|outerHTML)$/]',
       message: 'Render text with React, never by assigning HTML.',
     },
     {
-      selector: "CallExpression[callee.property.name=/^(insertAdjacentHTML|createContextualFragment)$/]",
+      selector: 'CallExpression[callee.property.name=/^(insertAdjacentHTML|createContextualFragment)$/]',
       message: 'Render text with React, never by parsing HTML.',
     },
     {

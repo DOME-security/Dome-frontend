@@ -19,19 +19,22 @@ export const RULES: Record<string, RuleText> = {
     title: 'AI agent hooks or auto-approved tools',
     category: 'autorun',
     severity: 'review',
-    summary: 'AI agent hooks and auto-approved tools: .claude/settings*.json, .cursor/hooks.json, .mcp.json, .cursor/mcp.json, .vscode/mcp.json.',
+    summary:
+      'AI agent hooks and auto-approved tools: .claude/settings*.json, .cursor/hooks.json, .mcp.json, .cursor/mcp.json, .vscode/mcp.json.',
   },
   'DOME-AST-001': {
     title: 'Font file is not a font',
     category: 'payload',
     severity: 'review',
-    summary: 'A file with a font extension whose bytes are not a real font (checked by format header fields, not just magic bytes).',
+    summary:
+      'A file with a font extension whose bytes are not a real font (checked by format header fields, not just magic bytes).',
   },
   'DOME-AST-002': {
     title: 'Asset in an execution position',
     category: 'payload',
     severity: 'block',
-    summary: 'An image or font asset referenced from an execution position (npm script, dev container hook, workflow step, shell script, fork, or read and evaluated).',
+    summary:
+      'An image or font asset referenced from an execution position (npm script, dev container hook, workflow step, shell script, fork, or read and evaluated).',
   },
   'DOME-CFG-001': {
     title: 'Code after the module body in a config file',
@@ -49,13 +52,15 @@ export const RULES: Record<string, RuleText> = {
     title: 'Runtime code construction in config or route code',
     category: 'payload',
     severity: 'review',
-    summary: 'Runtime code construction (eval, new Function, vm.runIn*, detached hidden child_process spawns) in config or route files.',
+    summary:
+      'Runtime code construction (eval, new Function, vm.runIn*, detached hidden child_process spawns) in config or route files.',
   },
   'DOME-DEV-001': {
     title: 'Dev container lifecycle command',
     category: 'autorun',
     severity: 'review',
-    summary: '.devcontainer/devcontainer.json initializeCommand, onCreateCommand, postCreateCommand, postStartCommand or postAttachCommand added or changed.',
+    summary:
+      '.devcontainer/devcontainer.json initializeCommand, onCreateCommand, postCreateCommand, postStartCommand or postAttachCommand added or changed.',
   },
   'DOME-ENV-001': {
     title: 'Encoded URL in .env with code that sends the environment',
@@ -67,7 +72,8 @@ export const RULES: Record<string, RuleText> = {
     title: 'Workflow added, changed or risky',
     category: 'autorun',
     severity: 'review',
-    summary: 'New or changed workflow under .github/workflows/, weighted up for pull_request_target, secrets passed to curl/wget, or posting to raw IPs.',
+    summary:
+      'New or changed workflow under .github/workflows/, weighted up for pull_request_target, secrets passed to curl/wget, or posting to raw IPs.',
   },
   'DOME-GIT-001': {
     title: '.gitignore stops ignoring .vscode or .env',
@@ -91,7 +97,7 @@ export const RULES: Record<string, RuleText> = {
     title: 'Published campaign marker',
     category: 'intel',
     severity: 'block',
-    summary: 'Published campaign markers (for example the signatures in OpenSourceMalware\'s PolinRider YARA rule).',
+    summary: "Published campaign markers (for example the signatures in OpenSourceMalware's PolinRider YARA rule).",
   },
   'DOME-IOC-003': {
     title: 'Known malicious npm package',
@@ -109,7 +115,8 @@ export const RULES: Record<string, RuleText> = {
     title: 'Install script added or changed',
     category: 'autorun',
     severity: 'review',
-    summary: 'preinstall, install, postinstall or prepare scripts added or changed (and binding.gyp, which npm builds on install).',
+    summary:
+      'preinstall, install, postinstall or prepare scripts added or changed (and binding.gyp, which npm builds on install).',
   },
   'DOME-NPM-002': {
     title: 'Install script runs an unexpected file',
@@ -127,7 +134,8 @@ export const RULES: Record<string, RuleText> = {
     title: 'Code reads Stellar CLI identities',
     category: 'stellar',
     severity: 'review',
-    summary: 'Code that reads Stellar CLI identities (~/.config/stellar/identity/*.toml, plaintext unless created with --secure-store).',
+    summary:
+      'Code that reads Stellar CLI identities (~/.config/stellar/identity/*.toml, plaintext unless created with --secure-store).',
   },
   'DOME-STL-002': {
     title: 'Code reads browser wallet extension storage',
@@ -163,7 +171,8 @@ export const RULES: Record<string, RuleText> = {
     title: 'Task runs a non-script file with Node',
     category: 'autorun',
     severity: 'block',
-    summary: 'A task command runs a font, image or other non-script file with node (string or array form, sh -c, -r/--import, stdin).',
+    summary:
+      'A task command runs a font, image or other non-script file with node (string or array form, sh -c, -r/--import, stdin).',
   },
   'DOME-VSC-005': {
     title: 'Task downloads and runs code',
@@ -175,7 +184,8 @@ export const RULES: Record<string, RuleText> = {
     title: 'Task output hidden',
     category: 'autorun',
     severity: 'info',
-    summary: 'Task options hide output (presentation.reveal: never, presentation.echo: false, hide: true) on a task that also runs on folder open or runs a payload.',
+    summary:
+      'Task options hide output (presentation.reveal: never, presentation.echo: false, hide: true) on a task that also runs on folder open or runs a payload.',
   },
 };
 
@@ -206,7 +216,8 @@ export const SEVERITY_ORDER: Record<Severity, number> = { block: 0, review: 1, i
 export const VERDICT_TEXT: Record<Verdict, { label: string; summary: string; tone: Severity | 'clean' }> = {
   block: {
     label: 'Blocked',
-    summary: 'Dome found code that runs when you open, install or build this repository and matches a known attack pattern. Do not open it in your editor.',
+    summary:
+      'Dome found code that runs when you open, install or build this repository and matches a known attack pattern. Do not open it in your editor.',
     tone: 'block',
   },
   review: {

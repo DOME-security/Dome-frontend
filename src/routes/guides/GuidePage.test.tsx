@@ -19,7 +19,10 @@ describe('guides', () => {
     const { user } = renderRoute('/guides/infected');
     expect(await screen.findByRole('heading', { level: 1, name: 'I think I was infected' })).toBeInTheDocument();
     const toc = screen.getByRole('navigation', { name: 'On this page' });
-    expect(within(toc).getByRole('link', { name: '1. Disconnect the machine' })).toHaveAttribute('href', '#1-disconnect-the-machine');
+    expect(within(toc).getByRole('link', { name: '1. Disconnect the machine' })).toHaveAttribute(
+      'href',
+      '#1-disconnect-the-machine',
+    );
     const box = screen.getByRole('checkbox', { name: /turn off wi-fi/i });
     await user.click(box);
     expect(box).toBeChecked();

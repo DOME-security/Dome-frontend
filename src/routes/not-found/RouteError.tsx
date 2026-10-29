@@ -10,7 +10,9 @@ export function RouteError() {
       <title>Error · Dome</title>
       <h1>{notFound ? 'Page not found' : 'Something went wrong'}</h1>
       <p>
-        {notFound ? 'That page does not exist.' : 'The page failed to load. Reload to try again; if it keeps happening, the app may have been updated.'}
+        {notFound
+          ? 'That page does not exist.'
+          : 'The page failed to load. Reload to try again; if it keeps happening, the app may have been updated.'}
       </p>
       <p>
         <Link to="/">Go to the home page</Link>

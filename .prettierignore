@@ -1,0 +1,8 @@
+dist
+coverage
+pnpm-lock.yaml
+playwright-report
+test-results
+src/content/guides
+README.md
+README (1).md

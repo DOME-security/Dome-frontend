@@ -11,7 +11,11 @@ describe('parseGitHubRepo', () => {
     'octocat/Hello-World',
     '  octocat/Hello-World  ',
   ])('accepts %s', (input) => {
-    expect(parseGitHubRepo(input)).toEqual({ owner: 'octocat', repo: 'Hello-World', url: 'https://github.com/octocat/Hello-World' });
+    expect(parseGitHubRepo(input)).toEqual({
+      owner: 'octocat',
+      repo: 'Hello-World',
+      url: 'https://github.com/octocat/Hello-World',
+    });
   });
 
   it.each([
@@ -34,7 +38,9 @@ describe('fileUrl', () => {
   const commit = '7fd1a60b01f91b314f59955a4e4d4e80d8edf11d';
 
   it('encodes each path segment and adds a line anchor', () => {
-    expect(fileUrl(repo, commit, '.vscode/tasks file#1.json', 5)).toBe(`https://github.com/o/r/blob/${commit}/.vscode/tasks%20file%231.json#L5`);
+    expect(fileUrl(repo, commit, '.vscode/tasks file#1.json', 5)).toBe(
+      `https://github.com/o/r/blob/${commit}/.vscode/tasks%20file%231.json#L5`,
+    );
   });
 
   it('refuses bad commits and repos', () => {

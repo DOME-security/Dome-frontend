@@ -6,12 +6,16 @@ describe('safeHref', () => {
     expect(safeHref(href)).not.toBeNull();
   });
 
-  it.each(['javascript:alert(1)', 'data:text/html,x', 'http://example.org', '//evil.example', 'https://u:p@example.org', 'vbscript:x'])(
-    'blocks %s',
-    (href) => {
-      expect(safeHref(href)).toBeNull();
-    },
-  );
+  it.each([
+    'javascript:alert(1)',
+    'data:text/html,x',
+    'http://example.org',
+    '//evil.example',
+    'https://u:p@example.org',
+    'vbscript:x',
+  ])('blocks %s', (href) => {
+    expect(safeHref(href)).toBeNull();
+  });
 });
 
 describe('parseInline', () => {

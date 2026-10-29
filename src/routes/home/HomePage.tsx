@@ -24,8 +24,8 @@ export function HomePage() {
       <section className={styles.hero}>
         <h1>Check a repo before you open it.</h1>
         <p className={ui.lead}>
-          Some repositories run code the moment you open the folder, install dependencies or start a build. Dome shows you what a repo
-          would run and whether it matches a known attack, with nothing to install.
+          Some repositories run code the moment you open the folder, install dependencies or start a build. Dome shows you what a
+          repo would run and whether it matches a known attack, with nothing to install.
         </p>
         <div className={styles.actions}>
           <Link to="/check/repo" className={ui.button}>

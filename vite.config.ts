@@ -28,9 +28,7 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react(), securityHeaders(env.VITE_DOME_API_URL)],
     server: {
-      proxy: env.VITE_DOME_API_URL
-        ? undefined
-        : { '/v1': env.DOME_API_PROXY_TARGET || 'http://localhost:8080' },
+      proxy: env.VITE_DOME_API_URL ? undefined : { '/v1': env.DOME_API_PROXY_TARGET || 'http://localhost:8080' },
     },
     build: { sourcemap: true },
     test: {

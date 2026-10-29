@@ -9,7 +9,10 @@ import { mockFetch } from './fixtures';
 type Routes = Parameters<typeof mockFetch>[0];
 
 /** Renders the real route tree at `path`, with API calls answered by `api`. */
-export function renderRoute(path: string, api: Routes = {}): RenderResult & { user: ReturnType<typeof userEvent.setup>; router: ReturnType<typeof createMemoryRouter> } {
+export function renderRoute(
+  path: string,
+  api: Routes = {},
+): RenderResult & { user: ReturnType<typeof userEvent.setup>; router: ReturnType<typeof createMemoryRouter> } {
   const fetchSpy = vi.fn(mockFetch(api));
   vi.stubGlobal('fetch', fetchSpy);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });

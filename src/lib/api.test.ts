@@ -28,12 +28,17 @@ describe('createApiClient', () => {
 
   it('encodes path parameters', async () => {
     const fetchImpl = vi.fn(mockFetch({}));
-    await createApiClient('', fetchImpl).getScan('../admin').catch(() => {});
+    await createApiClient('', fetchImpl)
+      .getScan('../admin')
+      .catch(() => {});
     expect(String(fetchImpl.mock.calls[0]?.[0])).toBe('/v1/scans/..%2Fadmin');
   });
 
   it('uses its own error text, not the response body', async () => {
-    const client = createApiClient('', mockFetch({ 'GET /v1/scans/x': () => ({ status: 429, body: { error: '<b>pwned</b>' } }) }));
+    const client = createApiClient(
+      '',
+      mockFetch({ 'GET /v1/scans/x': () => ({ status: 429, body: { error: '<b>pwned</b>' } }) }),
+    );
     const error = await client.getScan('x').catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(429);
