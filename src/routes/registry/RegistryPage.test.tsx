@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from 'vitest';
 import { DEMO_HASH, indicatorPage } from '../../test/fixtures';
 import { renderRoute } from '../../test/render';
 import { sentRequests } from '../../test/server';
-import { fakeChain, useFakes } from '../../test/services';
+import { fakeChain, setFakes } from '../../test/services';
 
 const list = (pages: Record<string, unknown>) =>
   http.get('/v1/indicators', ({ request }) =>
@@ -58,7 +58,7 @@ describe('/registry', () => {
 describe('/registry ledger spot-check', () => {
   it('re-checks listed fingerprints with is_known_bad and says when the ledger disagrees', async () => {
     const isKnownBad = vi.fn((_net, hash: string) => Promise.resolve(hash === DEMO_HASH));
-    useFakes({ chain: fakeChain({ isKnownBad }) });
+    setFakes({ chain: fakeChain({ isKnownBad }) });
     renderRoute('/registry', list({ '': indicatorPage }));
     expect(await screen.findByRole('alert')).toHaveTextContent('The Stellar testnet ledger disagrees with the Dome API.');
     expect(screen.getByRole('alert')).toHaveTextContent('bbbbbbbbbbbb… is not active on the ledger.');
@@ -66,7 +66,7 @@ describe('/registry ledger spot-check', () => {
   });
 
   it('confirms a matching sample', async () => {
-    useFakes({ chain: fakeChain({ isKnownBad: () => Promise.resolve(true) }) });
+    setFakes({ chain: fakeChain({ isKnownBad: () => Promise.resolve(true) }) });
     renderRoute('/registry', list({ '': indicatorPage }));
     expect(await screen.findByText(/Verified: a sample of 2 listed fingerprints matches/)).toBeInTheDocument();
   });
@@ -80,7 +80,7 @@ describe('/registry ledger spot-check', () => {
 
 describe('/registry/indicator/:hash', () => {
   it('shows the on-chain record with approvals and verifies it', async () => {
-    useFakes({
+    setFakes({
       chain: fakeChain({
         indicator: () =>
           Promise.resolve({
@@ -109,7 +109,7 @@ describe('/registry/indicator/:hash', () => {
   });
 
   it('flags an indicator the ledger says was retracted', async () => {
-    useFakes({
+    setFakes({
       chain: fakeChain({
         indicator: () =>
           Promise.resolve({

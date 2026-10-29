@@ -1,19 +1,14 @@
-import { Networks } from '@stellar/stellar-sdk';
 import { Client, type Attestation, type Indicator } from '../../vendor/registry-bindings';
-import type { NetworkConfig, StellarNetwork } from '../config';
+import type { NetworkConfig } from '../config';
 import { sha256Hex } from '../hash';
 import { bytesToHex, hexToBytes } from './bytes';
+import { PASSPHRASE } from './networks';
 import type { ChainAttestation, ChainIndicator } from './spotcheck';
 import type { CuratorAction, PreparedTransaction, RegistryChain, SignTransaction } from './types';
 
 // Reads and curator transactions through the generated contract bindings
 // (src/vendor/registry-bindings). This module pulls in the Stellar SDK, so it is
 // only ever loaded with a dynamic import.
-
-export const PASSPHRASE: Record<StellarNetwork, string> = {
-  testnet: Networks.TESTNET,
-  mainnet: Networks.PUBLIC,
-};
 
 function client(net: NetworkConfig, publicKey?: string): Client {
   return new Client({
@@ -52,12 +47,6 @@ function toChainAttestation(a: Attestation): ChainAttestation {
 /** Repository id convention shared with dome-backend: SHA-256 of `github.com/<owner>/<repo>`, lowercased. */
 export async function repoId(owner: string, repo: string): Promise<Uint8Array> {
   return hexToBytes(await sha256Hex(`github.com/${owner}/${repo}`.toLowerCase()));
-}
-
-/** The contract error code inside a simulation or submission failure, if any. */
-export function contractErrorCode(error: unknown): number | null {
-  const match = /Error\(Contract, #(\d+)\)/.exec(error instanceof Error ? error.message : String(error));
-  return match ? Number(match[1]) : null;
 }
 
 async function build(net: NetworkConfig, action: CuratorAction, source: string) {

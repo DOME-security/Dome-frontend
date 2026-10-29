@@ -5,7 +5,7 @@ import { reportHash } from '../../lib/hash';
 import { COMMIT, repoSummary, scan } from '../../test/fixtures';
 import { renderRoute } from '../../test/render';
 import { sentRequests } from '../../test/server';
-import { fakeChain, useFakes } from '../../test/services';
+import { fakeChain, setFakes } from '../../test/services';
 
 const PATH = '/v1/repos/dome-security/demo-repo';
 
@@ -81,7 +81,7 @@ describe('/repos/:owner/:repo', () => {
         retractedBy: null,
       }),
     );
-    useFakes({ chain: fakeChain({ latestAttestation }) });
+    setFakes({ chain: fakeChain({ latestAttestation }) });
     renderRoute(
       '/repos/dome-security/demo-repo',
       http.get(PATH, () => HttpResponse.json(repoSummary({ attestation: att }))),
@@ -92,7 +92,7 @@ describe('/repos/:owner/:repo', () => {
 
   it('warns when the ledger shows a different verdict', async () => {
     const att = await attestation();
-    useFakes({
+    setFakes({
       chain: fakeChain({
         latestAttestation: () =>
           Promise.resolve({

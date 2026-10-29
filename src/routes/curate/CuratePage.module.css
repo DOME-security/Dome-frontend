@@ -1,0 +1,28 @@
+.radios {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-5);
+}
+
+.radios label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+}
+
+.summary {
+  border-width: 2px;
+  border-color: var(--color-accent);
+}
+
+.summary h2 {
+  margin-top: 0;
+}
+
+.sent {
+  border-color: var(--color-clean-border);
+  background: var(--color-clean-bg);
+  color: var(--color-clean-text);
+  margin-bottom: var(--space-4);
+}

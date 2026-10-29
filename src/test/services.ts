@@ -31,7 +31,7 @@ export function fakeWallet(overrides: Partial<Wallet> = {}): Wallet {
 let current: { chain: RegistryChain; wallet: Wallet } = { chain: fakeChain(), wallet: fakeWallet() };
 
 /** Use these fakes for the next renderRoute call in this test. */
-export function useFakes(fakes: { chain?: RegistryChain; wallet?: Wallet }): void {
+export function setFakes(fakes: { chain?: RegistryChain; wallet?: Wallet }): void {
   current = { ...current, ...fakes };
 }
 

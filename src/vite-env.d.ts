@@ -1,5 +1,7 @@
 /// <reference types="vite/client" />
 
+type DomeServices = import('./lib/services').Services; // eslint-disable-line @typescript-eslint/consistent-type-imports -- ambient file cannot use import statements
+
 interface ImportMetaEnv {
   readonly VITE_DOME_API_URL?: string;
   readonly VITE_STELLAR_NETWORK?: string;
@@ -12,5 +14,5 @@ interface ImportMetaEnv {
 }
 
 interface Window {
-  __DOME_E2E__?: import('./lib/services').Services;
+  __DOME_E2E__?: DomeServices;
 }

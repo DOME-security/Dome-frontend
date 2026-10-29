@@ -68,6 +68,12 @@ export function contractErrorMessage(code: number): string {
   return CONTRACT_ERRORS[code] ?? `The registry rejected the transaction (error ${code}).`;
 }
 
+/** The contract error code inside a simulation or submission failure (`Error(Contract, #N)`), if any. */
+export function contractErrorCode(error: unknown): number | null {
+  const match = /Error\(Contract, #(\d+)\)/.exec(error instanceof Error ? error.message : String(error));
+  return match ? Number(match[1]) : null;
+}
+
 export const INDICATOR_KIND_TEXT: Record<string, string> = {
   // Kinds in the backend index.
   hash: 'File fingerprint',

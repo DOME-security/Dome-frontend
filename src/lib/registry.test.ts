@@ -1,7 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import { report } from '../test/fixtures';
 import { reportHash } from './hash';
-import { accountUrl, contractErrorMessage, contractUrl, indicatorKindLabel, shortKey, txUrl, verifyReportHash } from './registry';
+import {
+  accountUrl,
+  contractErrorCode,
+  contractErrorMessage,
+  contractUrl,
+  indicatorKindLabel,
+  shortKey,
+  txUrl,
+  verifyReportHash,
+} from './registry';
 
 const CONTRACT = 'CCHLCPUBLL4ROEFP5PR3JY4LUB32TLNB2KDF3DQLG3R53IK5OUW7TZUY';
 
@@ -24,6 +33,8 @@ describe('labels', () => {
   it('maps contract errors and kinds', () => {
     expect(contractErrorMessage(13)).toMatch(/already approved/);
     expect(contractErrorMessage(99)).toMatch(/error 99/);
+    expect(contractErrorCode(new Error('HostError: Error(Contract, #13)'))).toBe(13);
+    expect(contractErrorCode(new Error('network down'))).toBeNull();
     expect(indicatorKindLabel('font')).toBe('Fake font file');
     expect(indicatorKindLabel('toString')).toBe('Other');
   });
