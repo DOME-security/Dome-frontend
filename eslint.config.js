@@ -57,7 +57,7 @@ export default tseslint.config(
     rules: { 'no-script-url': 'off' },
   },
   {
-    files: ['vite.config.ts', 'playwright.config.ts', 'config/**', 'eslint.config.js'],
+    files: ['vite.config.ts', 'playwright.config.ts', 'config/**', 'e2e/**', 'eslint.config.js'],
     languageOptions: { globals: { ...globals.node } },
   },
 );
