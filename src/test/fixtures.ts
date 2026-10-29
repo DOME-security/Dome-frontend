@@ -64,15 +64,3 @@ export const indicatorPage: IndicatorPage = {
   ],
   nextCursor: null,
 };
-
-/** A fetch stub that answers by method and path. */
-export function mockFetch(routes: Record<string, (init?: RequestInit) => { status?: number; body: unknown }>) {
-  return async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
-    const url = new URL(String(input), 'http://localhost');
-    const key = `${init?.method ?? 'GET'} ${url.pathname}${url.search}`;
-    const route = routes[key] ?? routes[`${init?.method ?? 'GET'} ${url.pathname}`];
-    if (!route) return new Response(JSON.stringify({ error: 'not found' }), { status: 404 });
-    const { status = 200, body } = route(init);
-    return new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
-  };
-}

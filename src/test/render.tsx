@@ -1,20 +1,17 @@
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { render, type RenderResult } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
+import type { RequestHandler } from 'msw';
 import { createMemoryRouter, RouterProvider } from 'react-router';
-import { vi } from 'vitest';
 import { routes } from '../router';
-import { mockFetch } from './fixtures';
+import { server } from './server';
 
-type Routes = Parameters<typeof mockFetch>[0];
-
-/** Renders the real route tree at `path`, with API calls answered by `api`. */
+/** Renders the real route tree at `path`, with the Dome API answered by MSW `handlers`. */
 export function renderRoute(
   path: string,
-  api: Routes = {},
+  ...handlers: RequestHandler[]
 ): RenderResult & { user: ReturnType<typeof userEvent.setup>; router: ReturnType<typeof createMemoryRouter> } {
-  const fetchSpy = vi.fn(mockFetch(api));
-  vi.stubGlobal('fetch', fetchSpy);
+  server.use(...handlers);
   const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   const router = createMemoryRouter(routes, { initialEntries: [path] });
   const user = userEvent.setup();

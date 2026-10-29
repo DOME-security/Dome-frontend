@@ -1,11 +1,7 @@
 import { screen, within } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import { renderRoute } from '../../test/render';
 import { GUIDE_SLUGS, loadGuide } from './guides';
-
-afterEach(() => {
-  vi.unstubAllGlobals();
-});
 
 describe('guides', () => {
   it.each(GUIDE_SLUGS)('%s has a title, summary and sections', async (slug) => {

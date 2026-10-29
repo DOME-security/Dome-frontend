@@ -1,44 +1,38 @@
-import { describe, expect, it, vi } from 'vitest';
-import { mockFetch, scan } from '../test/fixtures';
+import { http, HttpResponse } from 'msw';
+import { describe, expect, it } from 'vitest';
+import { scan } from '../test/fixtures';
+import { sentRequests, server } from '../test/server';
 import { ApiError, createApiClient, errorMessage } from './api';
+
+const client = createApiClient('');
 
 describe('createApiClient', () => {
   it('posts a scan with only the fields the API accepts', async () => {
-    const seen = vi.fn();
-    const client = createApiClient(
-      'https://api.example',
-      mockFetch({
-        'POST /v1/scans': (init) => {
-          seen(JSON.parse(String(init?.body)));
-          return { status: 202, body: { id: 'abc', status: 'queued', links: { self: '/v1/scans/abc' } } };
-        },
-      }),
+    server.use(
+      http.post('/v1/scans', () =>
+        HttpResponse.json({ id: 'abc', status: 'queued', links: { self: '/v1/scans/abc' } }, { status: 202 }),
+      ),
     );
     await expect(client.createScan('https://github.com/o/r')).resolves.toMatchObject({ id: 'abc' });
-    expect(seen).toHaveBeenCalledWith({ url: 'https://github.com/o/r' });
     await client.createScan('https://github.com/o/r', 'main');
-    expect(seen).toHaveBeenLastCalledWith({ url: 'https://github.com/o/r', ref: 'main' });
+    expect(await sentRequests[0]!.json()).toEqual({ url: 'https://github.com/o/r' });
+    expect(await sentRequests[1]!.json()).toEqual({ url: 'https://github.com/o/r', ref: 'main' });
   });
 
   it('never sends cookies', async () => {
-    const fetchImpl = vi.fn(mockFetch({ 'GET /v1/scans/x': () => ({ body: scan() }) }));
-    await createApiClient('', fetchImpl).getScan('x');
-    expect(fetchImpl.mock.calls[0]?.[1]).toMatchObject({ credentials: 'omit' });
+    server.use(http.get('/v1/scans/x', () => HttpResponse.json(scan())));
+    await client.getScan('x');
+    expect(sentRequests[0]!.credentials).toBe('omit');
   });
 
   it('encodes path parameters', async () => {
-    const fetchImpl = vi.fn(mockFetch({}));
-    await createApiClient('', fetchImpl)
-      .getScan('../admin')
-      .catch(() => {});
-    expect(String(fetchImpl.mock.calls[0]?.[0])).toBe('/v1/scans/..%2Fadmin');
+    server.use(http.get('/v1/scans/:id', () => HttpResponse.json({ error: 'nope' }, { status: 404 })));
+    await client.getScan('../admin').catch(() => {});
+    expect(new URL(sentRequests[0]!.url).pathname).toBe('/v1/scans/..%2Fadmin');
   });
 
   it('uses its own error text, not the response body', async () => {
-    const client = createApiClient(
-      '',
-      mockFetch({ 'GET /v1/scans/x': () => ({ status: 429, body: { error: '<b>pwned</b>' } }) }),
-    );
+    server.use(http.get('/v1/scans/x', () => HttpResponse.json({ error: '<b>pwned</b>' }, { status: 429 })));
     const error = await client.getScan('x').catch((e: unknown) => e);
     expect(error).toBeInstanceOf(ApiError);
     expect((error as ApiError).status).toBe(429);
@@ -46,32 +40,37 @@ describe('createApiClient', () => {
   });
 
   it('rejects responses with the wrong shape', async () => {
-    const client = createApiClient('', mockFetch({ 'GET /v1/scans/x': () => ({ body: { id: 'x', status: 'pwned' } }) }));
+    server.use(http.get('/v1/scans/x', () => HttpResponse.json({ id: 'x', status: 'pwned' })));
     await expect(client.getScan('x')).rejects.toThrow(/Unexpected response/);
   });
 
   it('reports network failures with status 0', async () => {
-    const client = createApiClient('', () => Promise.reject(new TypeError('offline')));
+    server.use(http.get('/v1/repos/o/r', () => HttpResponse.error()));
     await expect(client.getRepo('o', 'r')).rejects.toMatchObject({ status: 0 });
   });
 
   it('validates hashes before looking them up', async () => {
-    const fetchImpl = vi.fn(mockFetch({}));
-    await expect(createApiClient('', fetchImpl).getIndicator('nope')).rejects.toMatchObject({ status: 400 });
-    expect(fetchImpl).not.toHaveBeenCalled();
+    await expect(client.getIndicator('nope')).rejects.toMatchObject({ status: 400 });
+    expect(sentRequests).toHaveLength(0);
   });
 
   it('lowercases hashes and pages indicators', async () => {
     const hash = 'A'.repeat(64);
-    const client = createApiClient(
-      '',
-      mockFetch({
-        [`GET /v1/indicators/${hash.toLowerCase()}`]: () => ({ body: { sha256: hash.toLowerCase(), known: false } }),
-        'GET /v1/indicators?limit=50&cursor=abc': () => ({ body: { indicators: [], nextCursor: 'def' } }),
+    server.use(
+      http.get('/v1/indicators/:sha256', ({ params }) => HttpResponse.json({ sha256: params.sha256, known: false })),
+      http.get('/v1/indicators', ({ request }) => {
+        const url = new URL(request.url);
+        return HttpResponse.json({ indicators: [], nextCursor: url.searchParams.get('cursor') === 'abc' ? 'def' : null });
       }),
     );
     await expect(client.getIndicator(hash)).resolves.toEqual({ sha256: hash.toLowerCase(), known: false });
     await expect(client.listIndicators({ limit: 50, cursor: 'abc' })).resolves.toEqual({ indicators: [], nextCursor: 'def' });
+    expect(new URL(sentRequests[1]!.url).search).toBe('?limit=50&cursor=abc');
+  });
+
+  it('prefixes the configured base URL', async () => {
+    server.use(http.get('https://api.dome.example/v1/scans/x', () => HttpResponse.json(scan())));
+    await expect(createApiClient('https://api.dome.example').getScan('x')).resolves.toMatchObject({ id: 'scan-1' });
   });
 });
 

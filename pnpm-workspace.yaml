@@ -7,3 +7,4 @@ minimumReleaseAge: 10080
 # platform-specific optional dependency, so it works without its postinstall.
 allowBuilds:
   esbuild: false
+  msw: false

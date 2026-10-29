@@ -1,9 +1,8 @@
 import { screen } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it } from 'vitest';
 import { renderRoute } from '../test/render';
 
 afterEach(() => {
-  vi.unstubAllGlobals();
   localStorage.clear();
 });
 
