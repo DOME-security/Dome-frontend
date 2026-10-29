@@ -1,0 +1,45 @@
+# Dome scans this repository on every pull request and push to main.
+#
+# The Dome Action has no tagged release yet, so it is built from a pinned
+# dome-backend commit. The tool is checked out into .dome-tool/, which is not
+# part of this repository's git tree; the Action scans only committed files.
+# Replace this with `uses: dome-security/dome-backend/packages/action@<release sha>`
+# once dome-backend publishes its first action release.
+name: dome
+on:
+  pull_request: # never pull_request_target: PR code must not run with write access
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Check out the Dome Action at a pinned dome-backend commit
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          repository: DOME-security/Dome-backend
+          ref: 7cc41e8d7d925d153c0d7ef050ebcb6adc560a37
+          path: .dome-tool
+          persist-credentials: false
+      - uses: pnpm/action-setup@a7487c7e89a18df4991f7f222e4898a00d66ddda # v4.1.0
+        with:
+          package_json_file: .dome-tool/package.json
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: 22
+      - name: Build the Action bundle without install scripts
+        working-directory: .dome-tool
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm --filter @dome-security/action bundle
+      - uses: ./.dome-tool/packages/action
+        with:
+          mode: enforce
