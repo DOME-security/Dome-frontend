@@ -75,9 +75,9 @@ export function SafeMarkdown({ blocks }: { blocks: Block[] }) {
             );
           case 'callout':
             return (
-              <aside key={i} className={styles.callout}>
+              <div key={i} className={styles.callout} role="note">
                 <InlineNodes nodes={block.children} />
-              </aside>
+              </div>
             );
           case 'list': {
             const checklist = block.items.every((item) => item.checkbox);
