@@ -16,6 +16,10 @@ export const routes: RouteObject[] = [
         children: [
           { index: true, lazy: async () => ({ Component: (await import('./routes/home/HomePage')).HomePage }) },
           {
+            path: 'check/repo',
+            lazy: async () => ({ Component: (await import('./routes/check-repo/CheckRepoPage')).CheckRepoPage }),
+          },
+          {
             path: 'guides/:slug',
             lazy: async () => {
               const [{ GuidePage }, { guideLoader }] = await Promise.all([
