@@ -1,0 +1,30 @@
+.hero {
+  max-width: var(--reading-width);
+  margin-bottom: var(--space-6);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: var(--space-4);
+  list-style: none;
+  padding: 0;
+}
+
+.steps h3 {
+  margin-top: 0;
+}
+
+.steps p {
+  margin-bottom: 0;
+}
+
+.links li {
+  margin-bottom: var(--space-2);
+}

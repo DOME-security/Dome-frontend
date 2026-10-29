@@ -52,6 +52,11 @@ export default tseslint.config(
     },
   },
   {
+    // Tests feed hostile strings such as javascript: URLs to the code under test.
+    files: ['**/*.test.{ts,tsx}'],
+    rules: { 'no-script-url': 'off' },
+  },
+  {
     files: ['vite.config.ts', 'playwright.config.ts', 'config/**', 'eslint.config.js'],
     languageOptions: { globals: { ...globals.node } },
   },

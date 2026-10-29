@@ -1,0 +1,82 @@
+/* Design tokens. Components use these variables, never raw colours. */
+:root {
+  --font-sans: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', monospace;
+
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.5rem;
+  --space-6: 2rem;
+  --space-7: 3rem;
+
+  --radius-1: 4px;
+  --radius-2: 8px;
+  --radius-3: 12px;
+
+  --text-sm: 0.875rem;
+  --text-md: 1rem;
+  --text-lg: 1.125rem;
+  --text-xl: 1.5rem;
+  --text-2xl: clamp(1.75rem, 1.2rem + 2.5vw, 2.5rem);
+
+  --content-width: 72rem;
+  --reading-width: 44rem;
+}
+
+/* Light theme (default). Contrast pairs meet WCAG 2.2 AA. */
+:root,
+:root[data-theme='light'] {
+  color-scheme: light;
+  --color-bg: #ffffff;
+  --color-surface: #f5f7fa;
+  --color-surface-raised: #ffffff;
+  --color-border: #d4dae3;
+  --color-text: #17202c;
+  --color-text-muted: #4a5668;
+  --color-link: #1d56b8;
+  --color-accent: #2f6fdb;
+  --color-accent-text: #ffffff;
+  --color-focus: #1d56b8;
+
+  --color-block-bg: #fdecec;
+  --color-block-border: #c62828;
+  --color-block-text: #8e1515;
+  --color-review-bg: #fff3e0;
+  --color-review-border: #c25e00;
+  --color-review-text: #7a3b00;
+  --color-info-bg: #eef1f5;
+  --color-info-border: #7b8794;
+  --color-info-text: #364152;
+  --color-clean-bg: #e8f5ec;
+  --color-clean-border: #2e7d4f;
+  --color-clean-text: #1b5233;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+  --color-bg: #0f141b;
+  --color-surface: #161d27;
+  --color-surface-raised: #1c2531;
+  --color-border: #2e3a4a;
+  --color-text: #e7ecf2;
+  --color-text-muted: #a9b4c2;
+  --color-link: #8cb4ff;
+  --color-accent: #4d86ea;
+  --color-accent-text: #0b1220;
+  --color-focus: #8cb4ff;
+
+  --color-block-bg: #3a1618;
+  --color-block-border: #ef6b6b;
+  --color-block-text: #ffc9c9;
+  --color-review-bg: #3a2610;
+  --color-review-border: #f0a050;
+  --color-review-text: #ffd9ad;
+  --color-info-bg: #222b37;
+  --color-info-border: #8b97a6;
+  --color-info-text: #d3dae3;
+  --color-clean-bg: #12301f;
+  --color-clean-border: #5cc48a;
+  --color-clean-text: #c3f0d4;
+}
