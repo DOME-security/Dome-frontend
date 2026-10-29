@@ -6,7 +6,7 @@ export function RouteError() {
   const error = useRouteError();
   const notFound = isRouteErrorResponse(error) && error.status === 404;
   return (
-    <main id="main" className={ui.page}>
+    <div className={ui.page}>
       <title>Error · Dome</title>
       <h1>{notFound ? 'Page not found' : 'Something went wrong'}</h1>
       <p>
@@ -15,6 +15,6 @@ export function RouteError() {
       <p>
         <Link to="/">Go to the home page</Link>
       </p>
-    </main>
+    </div>
   );
 }
