@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { canonicalJson, hashFile, MAX_HASH_BYTES, reportHash, sha256Hex } from './hash';
+import { canonicalJson, FileTooLargeError, hashFile, MAX_HASH_BYTES, reportHash, sha256Hex } from './hash';
 
 describe('sha256Hex', () => {
   it('matches known vectors', async () => {
@@ -15,8 +15,9 @@ describe('hashFile', () => {
   });
 
   it('refuses files over the limit', async () => {
-    const big = { size: MAX_HASH_BYTES + 1 } as Blob;
-    await expect(hashFile(big)).rejects.toThrow(RangeError);
+    const big = { size: MAX_HASH_BYTES + 1, arrayBuffer: () => Promise.reject(new Error('must not read')) } as unknown as Blob;
+    await expect(hashFile(big)).rejects.toThrow(FileTooLargeError);
+    await expect(hashFile(big)).rejects.toThrow(/up to 25 MB/);
   });
 });
 

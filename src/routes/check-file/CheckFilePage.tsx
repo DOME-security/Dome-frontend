@@ -6,7 +6,7 @@ import { FileDropzone } from '../../components/FileDropzone';
 import { ErrorMessage, Loading } from '../../components/Status';
 import { VerdictBanner } from '../../components/VerdictBanner';
 import { api, isSha256 } from '../../lib/api';
-import { hashFile } from '../../lib/hash';
+import { hashFile, MAX_HASH_MB } from '../../lib/hash';
 import { txUrl } from '../../lib/registry';
 import { HONESTY_NOTICE } from '../../lib/rules';
 import ui from '../../styles/ui.module.css';
@@ -128,7 +128,7 @@ export function CheckFilePage() {
         against files confirmed as malicious. The file is never uploaded.
       </p>
 
-      <FileDropzone onFile={onFile} disabled={hashing} />
+      <FileDropzone onFile={onFile} disabled={hashing} maxMb={MAX_HASH_MB} />
       {hashing && <Loading label="Computing the fingerprint on your device…" />}
       {hashError !== null && <ErrorMessage error={hashError} />}
 

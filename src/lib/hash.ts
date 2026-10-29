@@ -1,5 +1,19 @@
-/** Largest file the browser will hash. Web Crypto has no streaming digest, so the whole file is read into memory. */
-export const MAX_HASH_BYTES = 256 * 1024 * 1024;
+/**
+ * Largest file the browser will hash. Web Crypto has no streaming digest, so
+ * the whole file is read into memory; 25 MB stays safe on low-end phones and
+ * is far above the task files, scripts, fonts and configs this check is for.
+ */
+export const MAX_HASH_MB = 25;
+export const MAX_HASH_BYTES = MAX_HASH_MB * 1024 * 1024;
+
+export class FileTooLargeError extends RangeError {
+  constructor(readonly size: number) {
+    super(
+      `This file is ${(size / 1024 / 1024).toFixed(1)} MB. Dome can check files up to ${MAX_HASH_MB} MB in the browser. Payloads are usually small: check the repository it came from instead.`,
+    );
+    this.name = 'FileTooLargeError';
+  }
+}
 
 export function toHex(buffer: ArrayBuffer): string {
   return Array.from(new Uint8Array(buffer), (b) => b.toString(16).padStart(2, '0')).join('');
@@ -23,9 +37,7 @@ function readAsArrayBuffer(file: Blob): Promise<ArrayBuffer> {
 
 /** Hashes a file without uploading it anywhere. */
 export async function hashFile(file: Blob): Promise<string> {
-  if (file.size > MAX_HASH_BYTES) {
-    throw new RangeError(`Files over ${MAX_HASH_BYTES / 1024 / 1024} MB cannot be checked in the browser.`);
-  }
+  if (file.size > MAX_HASH_BYTES) throw new FileTooLargeError(file.size);
   return sha256Hex(await readAsArrayBuffer(file));
 }
 

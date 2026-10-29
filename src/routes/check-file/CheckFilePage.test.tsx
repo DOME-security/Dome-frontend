@@ -69,4 +69,15 @@ describe('/check/file', () => {
     await user.click(screen.getByRole('button', { name: 'Look up' }));
     expect(await screen.findByRole('heading', { name: 'Not on the known-bad list' })).toBeInTheDocument();
   });
+
+  it('refuses files over the size limit without reading or sending them', async () => {
+    const { user } = renderRoute('/check/file');
+    const big = new File(['x'], 'huge.bin');
+    Object.defineProperty(big, 'size', { value: 26 * 1024 * 1024 });
+    await user.upload(await screen.findByLabelText(/choose a file/i), big);
+    expect(await screen.findByRole('alert')).toHaveTextContent(
+      'This file is 26.0 MB. Dome can check files up to 25 MB in the browser.',
+    );
+    expect(sentRequests).toHaveLength(0);
+  });
 });
