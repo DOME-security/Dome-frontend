@@ -8,3 +8,5 @@ src/content/guides
 README.md
 README (1).md
 src/vendor
+lighthouse-report
+.lighthouseci

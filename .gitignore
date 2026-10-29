@@ -22,3 +22,5 @@ blob-report/
 .vscode/
 .idea/
 .DS_Store
+lighthouse-report/
+.lighthouseci/
