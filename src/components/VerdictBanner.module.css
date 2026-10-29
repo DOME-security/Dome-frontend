@@ -1,0 +1,38 @@
+.banner {
+  border: 2px solid;
+  border-radius: var(--radius-3);
+  padding: var(--space-4) var(--space-5);
+  margin-bottom: var(--space-5);
+}
+
+.banner p {
+  margin: 0;
+}
+
+.title {
+  margin: 0 0 var(--space-2);
+}
+
+.block {
+  background: var(--color-block-bg);
+  border-color: var(--color-block-border);
+  color: var(--color-block-text);
+}
+
+.review {
+  background: var(--color-review-bg);
+  border-color: var(--color-review-border);
+  color: var(--color-review-text);
+}
+
+.info {
+  background: var(--color-info-bg);
+  border-color: var(--color-info-border);
+  color: var(--color-info-text);
+}
+
+.clean {
+  background: var(--color-clean-bg);
+  border-color: var(--color-clean-border);
+  color: var(--color-clean-text);
+}
