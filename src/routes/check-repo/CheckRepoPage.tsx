@@ -1,31 +1,34 @@
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { useId, useState, type FormEvent } from 'react';
+import { useId, useRef, useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { ReportView } from '../../components/ReportView';
 import { ScanProgress } from '../../components/ScanProgress';
 import { ErrorMessage, Loading } from '../../components/Status';
 import { api } from '../../lib/api';
 import { parseGitHubRepo } from '../../lib/github';
-import type { Scan } from '../../lib/types';
+import { isTerminal, nextPollDelay } from '../../lib/polling';
 import ui from '../../styles/ui.module.css';
 
 const SCAN_ID = /^[\w-]{1,64}$/;
 const GIT_REF = /^(?!.*\.\.)(?!\/)[\w.\-/]{1,200}(?<!\/)$/;
-export const POLL_MS = 2000;
 
 function ScanResult({ id }: { id: string }) {
+  const startedAt = useRef(Date.now());
   const {
     data: scan,
     error,
     isPending,
+    refetch,
+    isFetching,
   } = useQuery({
     queryKey: ['scan', id],
     queryFn: () => api.getScan(id),
-    refetchInterval: (query) => {
-      const status = (query.state.data as Scan | undefined)?.status;
-      return status === 'queued' || status === 'running' ? POLL_MS : false;
-    },
+    // Finished scans never change, so they are cached for the session.
+    staleTime: (query) => (isTerminal(query.state.data?.status) ? Infinity : 0),
+    refetchInterval: (query) =>
+      nextPollDelay(query.state.data?.status, query.state.dataUpdateCount - 1, Date.now() - startedAt.current),
   });
+  const gaveUp = scan && !isTerminal(scan.status) && nextPollDelay(scan.status, 0, Date.now() - startedAt.current) === false;
 
   if (isPending) return <Loading label="Loading scan…" />;
   if (error) return <ErrorMessage error={error} />;
@@ -53,7 +56,23 @@ function ScanResult({ id }: { id: string }) {
           </>
         ) : null}
       </p>
-      {scan.status !== 'done' && scan.status !== 'failed' && <ScanProgress status={scan.status} />}
+      {!isTerminal(scan.status) && <ScanProgress status={scan.status} />}
+      {gaveUp && (
+        <div role="status" className={ui.card}>
+          <p>This scan is taking longer than usual. It is still not a result: do not open the repository yet.</p>
+          <button
+            type="button"
+            className={ui.secondary}
+            disabled={isFetching}
+            onClick={() => {
+              startedAt.current = Date.now();
+              void refetch();
+            }}
+          >
+            Check again
+          </button>
+        </div>
+      )}
       {scan.status === 'failed' && (
         <div role="alert" className={ui.card}>
           <p>
