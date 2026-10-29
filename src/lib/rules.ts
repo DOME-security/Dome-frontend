@@ -1,10 +1,10 @@
-import rulesFile from '../../vendor/dome-backend/rules.json';
+import rulesFile from '../vendor/rules.json';
 import type { Severity, Verdict } from './types';
 
 // Every word a user reads about a finding comes from the app. The backend
 // sends rule IDs, reason keys and severities; the text for them comes from
 // dome-backend's rule metadata, vendored at a pinned commit in
-// vendor/dome-backend/rules.json (refresh with scripts/sync-rules.mjs).
+// src/vendor/rules.json (refresh with scripts/sync-rules.mjs).
 // Text from a scanned repository or the API never reaches a verdict.
 
 export type RuleCategory = 'autorun' | 'payload' | 'intel' | 'stellar';

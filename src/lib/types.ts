@@ -1,7 +1,7 @@
 import type { components } from './api-schema';
 
 // Response shapes from dome-backend, generated from the vendored OpenAPI
-// document (vendor/dome-backend/openapi.json → src/lib/api-schema.ts via
+// document (src/vendor/openapi.json → src/lib/api-schema.ts via
 // `pnpm generate:api`). Edit the OpenAPI file, never the generated one.
 
 type Schemas = components['schemas'];

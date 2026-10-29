@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// Writes vendor/dome-backend/rules.json from a dome-backend checkout, until
+// Writes src/vendor/rules.json from a dome-backend checkout, until
 // dome-backend publishes rules.json itself.
 //
 //   node scripts/sync-rules.mjs ../Dome-backend
@@ -85,6 +85,6 @@ const out = {
   source: { repository: 'https://github.com/DOME-security/Dome-backend', commit, path: 'packages/engine/src/rules' },
   rules: rules.sort((a, b) => a.id.localeCompare(b.id)),
 };
-const target = new URL('../vendor/dome-backend/rules.json', import.meta.url);
+const target = new URL('../src/vendor/rules.json', import.meta.url);
 writeFileSync(target, `${JSON.stringify(out, null, 2)}\n`);
 console.log(`wrote ${rules.length} rules from dome-backend@${commit.slice(0, 12)}`);

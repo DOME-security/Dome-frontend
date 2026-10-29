@@ -20,7 +20,7 @@
     "test:e2e": "playwright test",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "generate:api": "openapi-typescript vendor/dome-backend/openapi.json -o src/lib/api-schema.ts && prettier --write src/lib/api-schema.ts"
+    "generate:api": "openapi-typescript src/vendor/openapi.json -o src/lib/api-schema.ts && prettier --write src/lib/api-schema.ts"
   },
   "dependencies": {
     "@tanstack/react-query": "5.85.5",
