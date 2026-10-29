@@ -24,6 +24,18 @@ export const routes: RouteObject[] = [
             lazy: async () => ({ Component: (await import('./routes/check-file/CheckFilePage')).CheckFilePage }),
           },
           {
+            path: 'registry',
+            lazy: async () => ({ Component: (await import('./routes/registry/RegistryPage')).RegistryPage }),
+          },
+          {
+            path: 'registry/indicator/:hash',
+            lazy: async () => ({ Component: (await import('./routes/registry/IndicatorPage')).IndicatorPage }),
+          },
+          {
+            path: 'repos/:owner/:repo',
+            lazy: async () => ({ Component: (await import('./routes/repo/RepoPage')).RepoPage }),
+          },
+          {
             path: 'guides/:slug',
             lazy: async () => {
               const [{ GuidePage }, { guideLoader }] = await Promise.all([
