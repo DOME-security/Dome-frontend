@@ -1,0 +1,23 @@
+node_modules/
+dist/
+*.tsbuildinfo
+coverage/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+
+# Local environment. Only the template is committed.
+.env
+.env.*
+!.env.example
+
+# Stellar identities never belong in this repo.
+.stellar/
+*.toml.key
+
+# Editors. .vscode/ is ignored on purpose: no tasks.json or settings here.
+.vscode/
+.idea/
+.DS_Store

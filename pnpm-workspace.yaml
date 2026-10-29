@@ -1,0 +1,9 @@
+# Single-package repo; this file only carries pnpm settings.
+
+# Do not resolve versions published in the last 7 days (minutes).
+minimumReleaseAge: 10080
+
+# No dependency gets to run install scripts. esbuild ships its binary as a
+# platform-specific optional dependency, so it works without its postinstall.
+allowBuilds:
+  esbuild: false
